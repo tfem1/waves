@@ -62,6 +62,7 @@ waves --themes sea      # preview a category (sea, gradient, mono, light) or all
 waves --no-logo
 waves --no-color
 waves --json            # raw data
+waves --update          # update to the latest version
 ```
 
 ### Theme picker (`waves -c`)
@@ -93,6 +94,18 @@ In `waves -c`, press `i` to cycle logos live; `Enter` saves the theme and the lo
 - **light** (for light terminals) — `pearl` `sandbar` `peach` `paper`
 
 Respects `NO_COLOR`; `FORCE_COLOR=1` forces colors. Needs a truecolor terminal and a font with braille glyphs (JetBrains Mono, Nerd Fonts, DejaVu, Fira Code…). GPU names use `lspci` (`pciutils`) when available.
+
+## Updates
+Once a day, waves quietly checks GitHub in the background (it never slows the display down). When a new version exists, the next run asks you:
+```
+  waves 0.3.0 is available (you have 0.2.0). Update now? [Y/n]
+```
+Press `Enter` to update, or `n` to be asked again tomorrow. Nothing is installed without your yes.
+```sh
+waves --update              # update right now
+waves --update-check off    # never check (on to turn it back on)
+```
+A copy inside a git clone is never replaced: update it with `git pull`.
 
 ## Autostart in Kitty
 ```sh

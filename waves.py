@@ -14,7 +14,8 @@ import subprocess
 import sys
 import time
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
+UPDATE_URL = "https://raw.githubusercontent.com/tfem1/waves/main/waves.py"
 
 # ───────────────────────────── themes ─────────────────────────────
 
@@ -788,6 +789,193 @@ def save_config(**values) -> None:
         f.writelines(f"{k}={v}\n" for k, v in cfg.items())
 
 
+# ───────────────────────────── updates ─────────────────────────────
+# Once a day at most, a detached background process checks GitHub for a newer
+# waves.py and only writes down what it found. The next time waves runs, it asks
+# whether to install it. Nothing is ever installed without a yes.
+
+UPDATE_EVERY = 24 * 3600
+UPDATE_CHECK_MODES = ("on", "off")
+
+
+def state_path() -> str:
+    if IS_WIN:
+        base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~")
+    else:
+        base = os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache")
+    return os.path.join(base, "waves", "state")
+
+
+def load_state() -> dict:
+    st = {}
+    for line in read(state_path()).splitlines():
+        k, _, v = line.partition("=")
+        if k.strip():
+            st[k.strip()] = v.strip()
+    return st
+
+
+def save_state(st: dict) -> None:
+    path = state_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.writelines(f"{k}={v}\n" for k, v in st.items() if v != "")
+    os.replace(tmp, path)
+
+
+def version_tuple(v: str):
+    return tuple(int(x) for x in re.findall(r"\d+", v)[:3]) or (0,)
+
+
+def script_path() -> str:
+    return os.path.realpath(os.path.abspath(sys.argv[0] if sys.argv and sys.argv[0] else __file__))
+
+
+def self_update_blocker() -> str:
+    """Why waves must not replace itself here, or an empty string."""
+    path = script_path()
+    if not os.path.isfile(path):
+        return "cannot find the waves script"
+    d = os.path.dirname(path)
+    while True:
+        if os.path.isdir(os.path.join(d, ".git")):
+            return "this copy lives in a git clone: update it with git pull"
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    if not os.access(os.path.dirname(path), os.W_OK) or not os.access(path, os.W_OK):
+        return f"no write access to {path}"
+    return ""
+
+
+def fetch_latest(timeout=6):
+    """Return (version, source) of waves.py on GitHub, or raise."""
+    import urllib.request
+    url = os.environ.get("WAVES_UPDATE_URL") or UPDATE_URL
+    req = urllib.request.Request(url, headers={"User-Agent": f"waves/{__version__}"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        text = r.read(2_000_000).decode("utf-8")
+    m = re.search(r'^__version__\s*=\s*"([^"]+)"', text, re.M)
+    if not m:
+        raise ValueError("the downloaded file is not waves")
+    compile(text, "waves.py", "exec")  # refuse anything that is not valid Python
+    if "def main" not in text or "LOGOS" not in text:
+        raise ValueError("the downloaded file is not waves")
+    return m.group(1), text
+
+
+def install_update(text: str) -> None:
+    path = script_path()
+    tmp = path + ".new"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+    try:
+        os.chmod(tmp, os.stat(path).st_mode)
+    except OSError:
+        pass
+    os.replace(tmp, path)
+
+
+def check_for_update() -> None:
+    """Runs in the detached background process: only records the latest version."""
+    try:
+        latest, _ = fetch_latest()
+    except Exception:
+        return
+    st = load_state()
+    st["available"] = latest if version_tuple(latest) > version_tuple(__version__) else ""
+    save_state(st)
+
+
+def maybe_start_update_check(mode: str) -> None:
+    """Spawn the background check if it is due. Never slows waves down."""
+    if mode == "off" or os.environ.get("WAVES_NO_UPDATE") or not sys.stdout.isatty():
+        return
+    st = load_state()
+    try:
+        last = float(st.get("last_check", "0"))
+    except ValueError:
+        last = 0.0
+    if time.time() - last < UPDATE_EVERY:
+        return
+    st["last_check"] = str(int(time.time()))
+    try:
+        save_state(st)
+        cmd = [sys.executable, script_path(), "--_update-check"]
+        if IS_WIN:
+            subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, creationflags=0x00000008 | 0x08000000)
+        else:
+            subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, start_new_session=True)
+    except OSError:
+        pass
+
+
+def ask_for_update(p) -> None:
+    """If a newer version was found, ask before installing it."""
+    st = load_state()
+    latest = st.get("available", "")
+    if not latest or version_tuple(latest) <= version_tuple(__version__):
+        return
+    try:
+        if time.time() < float(st.get("ask_after", "0")):
+            return
+    except ValueError:
+        pass
+    if not (sys.stdin.isatty() and sys.stdout.isatty()):
+        return
+    st["ask_after"] = str(int(time.time()) + UPDATE_EVERY)  # whatever happens, ask at most once a day
+    try:
+        save_state(st)
+    except OSError:
+        pass
+    why = self_update_blocker()
+    if why:
+        print(f"  {p.dim('waves')} {p.gradient(latest, bold=True)} {p.dim('is available · ' + why)}\n")
+        return
+    try:
+        answer = input(f"  {p.dim('waves')} {p.gradient(latest, bold=True)} "
+                       f"{p.dim('is available (you have ' + __version__ + '). Update now? [Y/n]')} ")
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return
+    if answer.strip().lower() in ("", "y", "yes", "o", "oui"):
+        cmd_update()
+    else:
+        print(f"  {p.dim('ok, I will ask again tomorrow · or run')} waves --update")
+    print()
+
+
+def cmd_update() -> int:
+    print(f"  waves {__version__} · checking GitHub…")
+    try:
+        latest, text = fetch_latest(timeout=15)
+    except Exception as e:
+        print(f"  could not check for updates: {e}")
+        return 1
+    if version_tuple(latest) <= version_tuple(__version__):
+        print(f"  already up to date ({__version__})")
+        return 0
+    why = self_update_blocker()
+    if why:
+        print(f"  waves {latest} is available, but {why}.")
+        return 1
+    try:
+        install_update(text)
+    except OSError as e:
+        print(f"  update failed: {e}")
+        return 1
+    st = load_state()
+    st["available"] = ""
+    st["ask_after"] = ""
+    save_state(st)
+    print(f"  ✓ updated {__version__} → {latest}")
+    return 0
+
+
 # ───────────────────────────── color picker (waves -c) ─────────────────────────────
 
 TABS = [("all", list(THEMES))] + [(tg, [n for n in THEMES if tg in tags_of(n)]) for tg in TAGS]
@@ -934,8 +1122,21 @@ def main() -> None:
                     help="preview every theme (or only: sea, gradient, mono, light)")
     ap.add_argument("--mono-themes", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("-l", "--list-themes", action="store_true", help="list themes by category")
+    ap.add_argument("-u", "--update", action="store_true", help="update waves now")
+    ap.add_argument("--update-check", choices=UPDATE_CHECK_MODES, metavar="on|off",
+                    help="check for updates once a day and ask before installing (default: on)")
+    ap.add_argument("--_update-check", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("-V", "--version", action="version", version=f"waves {__version__}")
     a = ap.parse_args()
+    if a._update_check:  # detached background process
+        check_for_update()
+        return
+    if a.update:
+        sys.exit(cmd_update())
+    if a.update_check:
+        save_config(update_check=a.update_check)
+        print(f"  update check: {a.update_check}")
+        return
     icon_note = ""
     if a.icon:  # an explicit -i becomes the new default
         if a.icon != load_icon():
@@ -991,6 +1192,10 @@ def main() -> None:
     print(render(data, p, show_logo=not a.no_logo, icon=a.icon))
     if icon_note:
         print(f"  {p.dim('default logo:')} {p.gradient(icon_note, bold=True)}\n")
+    mode = load_config().get("update_check", "on")
+    if mode != "off":
+        ask_for_update(p)
+    maybe_start_update_check(mode if mode in UPDATE_CHECK_MODES else "on")
     if os.environ.get("WAVES_DEBUG"):
         print(f"  {(time.perf_counter() - t0) * 1000:.1f} ms")
 
