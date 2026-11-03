@@ -48,7 +48,7 @@ waves --json            # raw data
 Priority: `-t` > `WAVES_THEME` > saved config > `ocean`.
 
 ### Themes (40)
-- **sea** — `tsunami` `ocean` `lagoon` `reef` `deepsea` `biolume` `seafoam` `kelp` `storm` `arctic` `tropic` `riptide` `maelstrom` `nautilus` `pearl` `sandbar`
+- **sea** — `surf` `ocean` `lagoon` `reef` `deepsea` `biolume` `seafoam` `kelp` `storm` `arctic` `tropic` `riptide` `maelstrom` `nautilus` `pearl` `sandbar`
 - **gradient** — `sunset` `mint` `aurora` `synthwave` `dusk` `candy` `ember` `forest` `nebula` `citrus` `vapor` `peach`
 - **mono** — `mono` `snow` `graphite` `ice` `abyss` `matrix` `ruby` `rose` `lavender` `amber` `teal` `paper`
 - **light** (for light terminals) — `pearl` `sandbar` `peach` `paper`
