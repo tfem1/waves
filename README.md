@@ -29,12 +29,18 @@ OS / distro · kernel · uptime · shell · carte mère · CPU · GPU (jusqu'à 
 ## Utilisation
 ```sh
 waves                 # thème ocean par défaut
-waves -t sunset       # thèmes : ocean, sunset, mint, aurora, mono
+waves -t sunset       # choisir un thème
+waves -l              # lister les thèmes avec leur palette
 waves --themes        # aperçu de tous les thèmes
+waves --mono-themes   # aperçu des thèmes monochromes
 waves --no-logo       # infos seules
 waves --no-color
 waves --json          # sortie brute en JSON
 ```
+### Thèmes
+- **Dégradés** : `ocean` · `sunset` · `mint` · `aurora`
+- **Monochromes** (une seule teinte, du clair au foncé) : `mono` · `snow` · `graphite` · `ice` · `abyss` · `matrix` · `ruby` · `rose` · `lavender` · `amber` · `teal`
+
 Thème par défaut via variable d'env : `export WAVES_THEME=aurora`.
 Respecte `NO_COLOR`. `FORCE_COLOR=1` force les couleurs (pipe, etc.).
 

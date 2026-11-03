@@ -24,7 +24,21 @@ THEMES = {
     "mint":   [(150, 255, 200), (60, 200, 170), (40, 120, 170)],
     "aurora": [(130, 255, 160), (60, 200, 255), (200, 110, 255)],
     "mono":   [(230, 230, 230), (160, 160, 160), (100, 100, 100)],
+    # ── monochrome: one hue, light → deep ──
+    "snow":     [(255, 255, 255), (235, 235, 240), (200, 200, 210)],
+    "graphite": [(200, 200, 205), (150, 150, 158), (110, 110, 118)],
+    "ice":      [(200, 235, 255), (110, 180, 245), (40, 110, 210)],
+    "abyss":    [(120, 160, 255), (75, 105, 230), (55, 70, 190)],
+    "matrix":   [(180, 255, 180), (60, 220, 90), (20, 140, 50)],
+    "ruby":     [(255, 170, 170), (235, 70, 80), (160, 20, 40)],
+    "rose":     [(255, 200, 225), (245, 120, 170), (200, 60, 120)],
+    "lavender": [(225, 205, 255), (170, 130, 245), (115, 70, 200)],
+    "amber":    [(255, 225, 150), (255, 175, 50), (200, 115, 10)],
+    "teal":     [(170, 255, 240), (50, 210, 190), (15, 130, 125)],
 }
+
+MONO_THEMES = ["mono", "snow", "graphite", "ice", "abyss", "matrix",
+               "ruby", "rose", "lavender", "amber", "teal"]
 
 LOGO = [
     "      .~~.              ",
@@ -370,6 +384,8 @@ def main() -> None:
     ap.add_argument("--no-logo", action="store_true", help="hide the wave logo")
     ap.add_argument("--json", action="store_true", help="print raw data as JSON")
     ap.add_argument("--themes", action="store_true", help="preview every theme")
+    ap.add_argument("--mono-themes", action="store_true", help="preview monochrome themes only")
+    ap.add_argument("-l", "--list-themes", action="store_true", help="list theme names")
     ap.add_argument("-V", "--version", action="version", version=f"waves {__version__}")
     a = ap.parse_args()
     if a.theme not in THEMES:
@@ -381,8 +397,15 @@ def main() -> None:
         print(json.dumps(data, indent=2))
         return
     color = not a.no_color and "NO_COLOR" not in os.environ and sys.stdout.isatty() or os.environ.get("FORCE_COLOR")
-    if a.themes:
-        for name in THEMES:
+    if a.list_themes:
+        p = Painter("ocean", bool(color))
+        for name, stops in THEMES.items():
+            sw = "".join(Painter(name, bool(color)).at(i / 5, "██") for i in range(6))
+            tag = p.dim("mono") if name in MONO_THEMES else ""
+            print(f"  {name:<9} {sw}  {tag}")
+        return
+    if a.themes or a.mono_themes:
+        for name in (MONO_THEMES if a.mono_themes else THEMES):
             p = Painter(name, bool(color))
             print(f"\n  {p.gradient(name, bold=True)}")
             print(render(data, p, show_logo=not a.no_logo))
