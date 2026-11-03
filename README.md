@@ -8,15 +8,42 @@ A minimal, good-looking system fetch, in the spirit of fastfetch. One Python fil
 OS / distro · kernel · uptime · shell · motherboard · CPU · GPU (up to 2) · RAM (with a bar) · disks (up to 2) · `/` usage
 
 ## Install
-### Linux
+### Linux — one command
 ```sh
-./install.sh            # installs ~/.local/bin/waves
-./install.sh --kitty    # also show waves whenever Kitty opens
+curl -fsSL https://raw.githubusercontent.com/tfem1/waves/main/install.sh | sh
+```
+Also show waves whenever Kitty opens:
+```sh
+curl -fsSL https://raw.githubusercontent.com/tfem1/waves/main/install.sh | sh -s -- --kitty
 ```
 
-### Windows
-Needs Python 3 (`winget install Python.Python.3.12`). In PowerShell, from the waves folder:
+### Linux — with git
+```sh
+git clone https://github.com/tfem1/waves.git
+cd waves
+./install.sh              # installs ~/.local/bin/waves
+./install.sh --kitty      # also show waves whenever Kitty opens
+```
+Update later with `git pull && ./install.sh`. Remove with `./install.sh --uninstall`.
+
+### Windows — one command
+Needs Python 3 (`winget install Python.Python.3.12`). In PowerShell:
 ```powershell
+irm https://raw.githubusercontent.com/tfem1/waves/main/install.ps1 | iex
+```
+Also show waves whenever PowerShell opens:
+```powershell
+$env:WAVES_STARTUP=1; irm https://raw.githubusercontent.com/tfem1/waves/main/install.ps1 | iex
+```
+Uninstall:
+```powershell
+$env:WAVES_UNINSTALL=1; irm https://raw.githubusercontent.com/tfem1/waves/main/install.ps1 | iex
+```
+
+### Windows — with git
+```powershell
+git clone https://github.com/tfem1/waves.git
+cd waves
 powershell -ExecutionPolicy Bypass -File install.ps1            # adds the waves command
 powershell -ExecutionPolicy Bypass -File install.ps1 -Startup   # also show waves when PowerShell opens
 powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall

@@ -4,12 +4,17 @@
 #   ./install.sh                     install the waves command
 #   ./install.sh --kitty             + show waves when Kitty opens
 #   ./install.sh --uninstall-kitty   remove the autostart
+#   ./install.sh --uninstall         remove waves and the autostart
+# One-liner (downloads waves.py from GitHub):
+#   curl -fsSL https://raw.githubusercontent.com/tfem1/waves/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/tfem1/waves/main/install.sh | sh -s -- --kitty
 set -e
 DEST="${PREFIX:-$HOME/.local}/bin"
+SRC_URL="${WAVES_SRC:-https://raw.githubusercontent.com/tfem1/waves/main/waves.py}"
 MARK="# >>> waves (kitty) >>>"
 END="# <<< waves (kitty) <<<"
 
-add_block() {  # $1 = fichier rc, $2 = contenu
+add_block() {  # $1 = rc file, $2 = block content
     [ -f "$1" ] || { mkdir -p "$(dirname "$1")"; : > "$1"; }
     if grep -qF "$MARK" "$1"; then
         sed -i.bak "/$MARK/,/$END/d" "$1" && rm -f "$1.bak"   # refresh the block
@@ -29,13 +34,36 @@ remove_block() {
 FISH_RC="${XDG_CONFIG_HOME:-$HOME/.config}/fish/config.fish"
 
 case "$1" in
-    --uninstall-kitty)
+    --uninstall-kitty|--uninstall)
         remove_block "$HOME/.bashrc"; remove_block "$HOME/.zshrc"; remove_block "$FISH_RC"
+        if [ "$1" = "--uninstall" ]; then
+            rm -f "$DEST/waves"
+            echo "waves uninstalled (config kept in ~/.config/waves)"
+        fi
         exit 0 ;;
 esac
 
+command -v python3 >/dev/null 2>&1 || echo "warning: python3 was not found, waves needs it"
+
+# use waves.py next to this script (git clone), or download it (curl | sh)
+HERE="$(cd "$(dirname "$0")" 2>/dev/null && pwd || true)"
 mkdir -p "$DEST"
-install -m 755 "$(dirname "$0")/waves.py" "$DEST/waves"
+if [ -n "$HERE" ] && [ -f "$HERE/waves.py" ]; then
+    install -m 755 "$HERE/waves.py" "$DEST/waves"
+else
+    echo "downloading waves…"
+    TMP="$(mktemp)"
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsSL "$SRC_URL" -o "$TMP"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO "$TMP" "$SRC_URL"
+    else
+        echo "error: curl or wget is needed to download waves"; rm -f "$TMP"; exit 1
+    fi
+    head -1 "$TMP" | grep -q python || { echo "error: download failed"; rm -f "$TMP"; exit 1; }
+    install -m 755 "$TMP" "$DEST/waves"
+    rm -f "$TMP"
+fi
 echo "waves installed to $DEST/waves"
 case ":$PATH:" in *":$DEST:"*) ;; *) echo "note: add $DEST to your PATH";; esac
 
