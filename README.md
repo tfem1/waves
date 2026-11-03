@@ -61,4 +61,20 @@ Respecte `NO_COLOR`. `FORCE_COLOR=1` force les couleurs (pipe, etc.).
 > Nécessite un terminal *truecolor* (Kitty, Alacritty, WezTerm, GNOME Terminal, Konsole…).
 > Les noms de GPU utilisent `lspci` (paquet `pciutils`) s'il est présent, sinon un fallback via `/sys`.
 
-Pour l'afficher à chaque ouverture de terminal : ajoute `waves` à la fin de ton `~/.bashrc` / `~/.zshrc`.
+## Lancer waves à l'ouverture de Kitty
+```sh
+./install.sh --kitty            # fish, bash et zsh détectés automatiquement
+./install.sh --uninstall-kitty  # pour retirer
+```
+waves ne s'affiche que dans une fenêtre Kitty interactive (`$KITTY_WINDOW_ID`) : pas dans les autres terminaux, ni en SSH, ni dans les scripts.
+Avec fish, le message d'accueil (`fish_greeting`) est désactivé dans Kitty pour laisser la place à waves.
+
+Bloc ajouté à `~/.config/fish/config.fish` :
+```fish
+# >>> waves (kitty) >>>
+if status is-interactive; and set -q KITTY_WINDOW_ID; and test -x "$HOME/.local/bin/waves"
+    set -g fish_greeting
+    "$HOME/.local/bin/waves"
+end
+# <<< waves (kitty) <<<
+```
