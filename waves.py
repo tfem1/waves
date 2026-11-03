@@ -324,7 +324,7 @@ def render(data: dict, p: Painter, show_logo=True) -> str:
     m = data["memory"]
     if m["total"]:
         r = m["used"] / m["total"]
-        entries.append(("ram", f"{human(m['used'])} / {human(m['total'])}  "
+        entries.append(("ram", f"{human(m['used']) + ' / ' + human(m['total']):<21} "
                                f"{bar(p, r)} {p.dim(f'{r * 100:.0f}%')}"))
     for i, d in enumerate(data["disks"]):
         lbl = f"disk{i + 1}" if len(data["disks"]) > 1 else "disk"
@@ -335,7 +335,7 @@ def render(data: dict, p: Painter, show_logo=True) -> str:
     rt = data["root"]
     if rt["total"]:
         r = rt["used"] / rt["total"]
-        entries.append(("root", f"{human(rt['used'])} / {human(rt['total'])}  "
+        entries.append(("root", f"{human(rt['used']) + ' / ' + human(rt['total']):<21} "
                                 f"{bar(p, r)} {p.dim(f'{r * 100:.0f}%')}"))
 
     n = len(entries)
