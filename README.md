@@ -56,6 +56,7 @@ Use **Windows Terminal** with a font that has braille glyphs (Cascadia Mono, Jet
 waves                   # default theme
 waves -c                # interactive theme picker
 waves -t reef           # pick a theme
+waves -i moon           # pick a logo
 waves -l                # list themes by category
 waves --themes sea      # preview a category (sea, gradient, mono, light) or all
 waves --no-logo
@@ -68,11 +69,22 @@ waves --json            # raw data
 |---|---|
 | `←` `→` | browse themes |
 | `Tab` / `Shift+Tab` | switch category: all · sea · gradient · mono · light |
+| `i` | next logo |
 | `r` | random theme |
-| `Enter` | save as default (`~/.config/waves/config`) |
+| `Enter` | save theme and logo as default (`~/.config/waves/config`) |
 | `q` / `Esc` | quit |
 
-Priority: `-t` > `WAVES_THEME` > saved config > `ocean`.
+Priority: `-t` / `-i` > `WAVES_THEME` / `WAVES_ICON` > saved config > `ocean` / `wave`.
+
+### Logos (5)
+Pick the wave drawn next to your info with `-i`:
+```sh
+waves -i great          # wave · moon · curl · swell · great
+waves --icons           # preview them all
+```
+In `waves -c`, press `i` to cycle logos live; `Enter` saves the theme and the logo together.
+
+![logos](preview-logos.png)
 
 ### Themes (40)
 - **sea** — `surf` `ocean` `lagoon` `reef` `deepsea` `biolume` `seafoam` `kelp` `storm` `arctic` `tropic` `riptide` `maelstrom` `nautilus` `pearl` `sandbar`

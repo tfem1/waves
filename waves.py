@@ -82,18 +82,71 @@ def stops_of(name: str):
 
 MONO_THEMES = [n for n in THEMES if "mono" in tags_of(n)]
 
-LOGO = [
-    "          ⢀⡠⡤⠤⢤⠤⣀             ",
-    "       ⢀⡤⣺⣽⣾⣾⣔⣒⣷⡡⠱⢄           ",
-    "      ⣠⣾⣾⢯⣞⣣⢟⣹⣿⣿⣷⢋⡔⢋⠂⡄        ",
-    "     ⣴⣟⡶⣏⡿⣔⢫⣾⣿⣿⣿⣿⣷⣷⡉⠜⠃        ",
-    "    ⣰⡿⡞⡙⢾⢻⣌⣻⣿⣿⣿⠟⢉⢹⣷⡿⣹⠉⠓       ",
-    "  ⢠⣤⠿⡽⢛⡧⡶⣦⣉⢹⣿⣽⣿⡄⠈⣟⡉⠚⠁⠙        ",
-    "⠠⣴⡿⢷⠟⠍⠩⠞⢧⣭⡻⢦⡿⣿⣿⣷⣄⠈⠉           ",
-    "⠸⢟⣡⠢⢌⠂⢇⣭⢂⢹⡿⣧⣟⢶⢭⠿⣿⣷⣤⣀⡀   ⣀⣤⣤⣤⣠⡄",
-    "⠈⢶⢭⣗⣮⢻⣭⢮⢯⣳⣳⣽⣻⣟⢿⢿⣴⣯⢿⣹⣟⢿⡻⣟⠿⣭⣯⡟⠞ ",
-    "  ⠉⠙⠛⠛⠚⠛⠛⠓⠛⠓⠛⠛⠛⠛⠛⠓⠛⠛⠛⠛⠋⠉⠉⠉    ",
-]
+# Wave logos (waves -i NAME, waves --icons to preview them all)
+LOGOS = {
+    "wave": [
+        "          ⢀⡠⡤⠤⢤⠤⣀",
+        "       ⢀⡤⣺⣽⣾⣾⣔⣒⣷⡡⠱⢄",
+        "      ⣠⣾⣾⢯⣞⣣⢟⣹⣿⣿⣷⢋⡔⢋⠂⡄",
+        "     ⣴⣟⡶⣏⡿⣔⢫⣾⣿⣿⣿⣿⣷⣷⡉⠜⠃",
+        "    ⣰⡿⡞⡙⢾⢻⣌⣻⣿⣿⣿⠟⢉⢹⣷⡿⣹⠉⠓",
+        "  ⢠⣤⠿⡽⢛⡧⡶⣦⣉⢹⣿⣽⣿⡄⠈⣟⡉⠚⠁⠙",
+        "⠠⣴⡿⢷⠟⠍⠩⠞⢧⣭⡻⢦⡿⣿⣿⣷⣄⠈⠉",
+        "⠸⢟⣡⠢⢌⠂⢇⣭⢂⢹⡿⣧⣟⢶⢭⠿⣿⣷⣤⣀⡀   ⣀⣤⣤⣤⣠⡄",
+        "⠈⢶⢭⣗⣮⢻⣭⢮⢯⣳⣳⣽⣻⣟⢿⢿⣴⣯⢿⣹⣟⢿⡻⣟⠿⣭⣯⡟⠞",
+        "  ⠉⠙⠛⠛⠚⠛⠛⠓⠛⠓⠛⠛⠛⠛⠛⠓⠛⠛⠛⠛⠋⠉⠉⠉",
+    ],
+    "moon": [
+        "                       ⣀⣤⣤⣀",
+        "                     ⢀⣾⣿⣿⣿⣿⣷",
+        "       ⣠⠴⠒⠋⢉⡝⠲⢦⡀     ⠸⣿⣿⣿⣿⣿⣿",
+        "    ⢀⡴⠚⢡⣤⣤⣴⣾⣷⣷⣨⢷⣀⡀    ⠹⢿⣿⣿⡿⠋",
+        " ⢀⣠⠴⠋  ⠘⣟⡛⡽⡹⣫⣿⣴⣤⠿⣿⡆",
+        "⠈⠉⠁⢰⡦⡄ ⣤⠌⣷⣷⣷⢣⠟⠛⠻⣼⣿           ⣠",
+        "⢰⣾⣶⣦⢿⣭⣆⡻⣿⣿⣿⣻⣸⡀ ⠃⠿⠷⠂        ⢀⠔⠁",
+        "⢸⣿⢿⣿⣎⢿⢿⣿⡿⠛⠛⠳⣿⣧⡀⠰⣿⠂       ⣠⠖⠁⢀⠾",
+        " ⠙⢿⣿⣿⣿⠟⠋     ⠙⠿⣦⣄⣀⡀ ⣀⣀⣠⠴⠚⣁⡠⣾⣯⢟",
+        " ⠠⣄⣀⣀⡀⠲⡄⠰⠒⠃⡴⣶⣦⡐⢄⣯⣍⡛⠛⠉⢉⡀⢀⣩⠵⠶⠛⡵⢛",
+        " ⣤⣾⠛⣟⣹⣦⣒⣢⢿⣾⣧⡸⢙⠿⣶⣷⣬⣊⣳⣿⣽⣟⡟⠛⣋⣒⣓⣒⣪",
+        " ⠿⠃ ⠹⠿⠿⠧⠴⠶⠾⡿⠇⠤⠕⠚⠿⠿⠟⠻⠛⠭⠥⠶⠭⠭⠤⠤⠤⠤",
+    ],
+    "curl": [
+        "     ⢀⣀⣤⣤⣤⣀⡀",
+        "    ⣰⠟⠉  ⠉⠙⠻⣶⣄",
+        "    ⢏ ⠈⠉⠲⣄  ⠈⢻⣦",
+        "    ⠈⠂   ⢹⡇   ⠹⣷⡀",
+        "⣀⣠⣤⣀⣀⣀⣀⣀⣠⣿⠃    ⠈⠻⣦⣀",
+        "   ⠈⠉⠛⠛⠛⠉         ⠉⠉⠒⠒",
+    ],
+    "swell": [
+        "                 ⣠⣴⣶⠾⠿⠿⠯⣷⣄⡀",
+        "              ⢀⣼⣾⠛⠁      ⠈⢻⣦",
+        "            ⣠⣾⠿⠁   ⢀⣤⣾⣟⣛⣛⣶⣬⣿⣆",
+        "          ⢀⣾⠟⠃     ⣾⣿⠟⠉⠉⠉⠉⠛⠿⠟",
+        "        ⢀⣴⡟⠋       ⣿⡏⣤",
+        "       ⣠⡿⠛         ⠙⣷⡍          ⢀⣀⣀⣤⣤⣤⣀",
+        "     ⣠⣼⡏            ⠈⠙⠷⣤⣤⣠⣤⣤⡤⡶⣶⢿⠟⠹⠿⠄⣿⣿⠏ ⣀⣤⡦    ⣀⡄",
+        "⢀⣄⣠⣶⣿⠏                  ⠈⠉⠓⠚⠋⠉      ⠈⠛⡛⡻⠿⠿⠙⠓⢒⣺⡿⠋⠁",
+        "⠉⠉⠉⠛⠁                                        ⠉⠉⠁",
+    ],
+    "great": [
+        "           ⢀⣀⣀⡀⢤⢰⡒⣌⢩⠳⡤⡄",
+        "       ⢀⠠⠒⢉ ⢤ ⣀⡱⡷⠭⡻⢵⣞⢣⠴⡲⣤",
+        "     ⢀⠴⠁⡄⡊⠜⡜⣜⣬⣵⣀⣓⢪⣽⡺⣥⣧⠌⡱⠣⢖",
+        "    ⠠⢂⠠⢪⢎⡼⠪⠞⠟⢟⣿⣿⣿⣿⣾⣿⡿⡽⡛⢦⠙⡲⣉⠂",
+        "   ⠠⢗⡵⢋⡞⡚⡴⣭⣾⣾⡗⣸⣿⣿⣿⣿⣿⠿⠟⡷⣡⣚⢴⠑⠛ ⢀ ⠄⢀⢤⢐⢶⠒⣖⣆⣤⡄",
+        "  ⢀⡘⢞⠰⣹⣏⠉⣶⣿⣿⣿⣿⣿⣿⣿⣾⣿⡟   ⠁⠓⠝  ⡪⣐⢤⣫⣿⠝⣺⡱⣛⡷⣜⡬⣲⣄",
+        "  ⡎⢸⡎⢒⠌⠿⢬⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡇     ⡠⣪⡮⣪⢣⣟⣹⢻⣿⣷⣞⣿⣿⣟⣱⡍⣟⠅",
+        "⢠⠊⣈⡘⣼⠏⡜⢧⣺⣿⣿⣿⣿⣿⣿⣿⣷⣿⣿⣅  ⠠⢀⣼⣽⠏⣷⣳⣿⣿⣿⣿⣿⣿⡿⠋⠉⢽⡽⢱⢚⡆",
+        "⡾⣽⣶⣾⣫⢿⡬⢝⡌⣿⣿⣿⣿⡽⣿⣿⣿⣿⣿⣿⣦⡦⣹⣿⣾⠽⢺⣾⢇⡝⣿⣿⣿⣿⣿   ⠈⠫⠷⠙⠋   ⡀",
+        " ⢩⡿⢿⣟⠑⢳⣯⡟⢚⣻⣿⣿⣿⣽⣿⣿⣿⣿⣿⣿⣷⣌⣚⣛⣃⣤⡦⡾⣠⣤⣿⣿⣿⣿⡄  ⢀⡀ ⣠⣀⡀⢀⢤⡇",
+        "⣴⠖⠈⠛⠫⡠⢄⡔⣄⢮⠞⠋⠉⢿⣿⣾⣻⣿⣿⣷⣿⣿⣿⣿⣿⣷⣹⣚⡳⢃⣶⢄⣘⢿⣿⣿⢞⡓⢧⣞⢫⣵⣎⣽⣩⣶⡇",
+        "⣿⣿⡆⠠⣝⣬⡿⡇⣇⢮⢦⡘⣌⠛⢹⢿⣿⣷⣽⣻⢿⣿⣿⣿⣿⣿⣿⣿⣷⣷⣾⣷⣦⣡⠙⣄⠦⠯⣝⣛⡹⣿⣻⢭⣽⡏",
+        "⣿⡿⢁⣇⣿⣹⣟⣧⠘⢯⣖⣳⣬⡳⣤⣘⠿⣿⣿⣿⣿⣾⢯⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢟⡿⢿⣿⣵⢶⡾⣾⠅",
+        "⠈⠠⢞⣶⢿⣿⣞⡷⣧⡈⠙⢶⣭⣟⡿⣿⣿⣶⣬⣛⡽⢻⣟⡻⢿⣽⠷⠾⣶⣿⣿⣿⣿⣿⠿⠛⠉⣰⣉⣼⣶⠯⠿⠿⠓⠊",
+        "             ⠉⠉⠉⠉⠉⠉⠉⠉⠉ ⠛⠛⠂⠙⠊⠙⠛⠂⠈⠁  ⠐⠉⠁",
+    ],
+}
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 RESET = "\x1b[0m"
@@ -636,7 +689,7 @@ def paint_logo_line(p: Painter, line: str, row: int, rows: int) -> str:
     return "".join(out) + RESET
 
 
-def render(data: dict, p: Painter, show_logo=True) -> str:
+def render(data: dict, p: Painter, show_logo=True, icon: str = "wave") -> str:
     lab_w = 7
     rows: list[str] = []
 
@@ -681,10 +734,12 @@ def render(data: dict, p: Painter, show_logo=True) -> str:
     if not show_logo:
         return "\n".join(rows)
 
-    logo_w = max(len(l) for l in LOGO)
-    logo = [paint_logo_line(p, l.ljust(logo_w), i, len(LOGO)) for i, l in enumerate(LOGO)]
+    art = LOGOS.get(icon, LOGOS["wave"])
+    logo_w = max(max(len(l) for l in art), 9)
+    logo = [paint_logo_line(p, l.ljust(logo_w), i, len(art)) for i, l in enumerate(art)]
     logo.append(" " * logo_w)
-    logo.append(" " * ((logo_w - 9) // 2) + p.gradient("w a v e s", bold=True) + " " * ((logo_w - 9) // 2 + 1))
+    left = (logo_w - 9) // 2
+    logo.append(" " * left + p.gradient("w a v e s", bold=True) + " " * (logo_w - 9 - left))
 
     h = max(len(logo), len(rows))
     lpad = (h - len(logo)) // 2
@@ -705,19 +760,32 @@ def config_path() -> str:
     return os.path.join(base, "waves", "config")
 
 
-def load_theme() -> str:
+def load_config() -> dict:
+    cfg = {}
     for line in read(config_path()).splitlines():
         k, _, v = line.partition("=")
-        if k.strip() == "theme" and v.strip() in THEMES:
-            return v.strip()
-    return ""
+        if k.strip():
+            cfg[k.strip()] = v.strip()
+    return cfg
 
 
-def save_theme(name: str) -> None:
+def load_theme() -> str:
+    t = load_config().get("theme", "")
+    return t if t in THEMES else ""
+
+
+def load_icon() -> str:
+    i = load_config().get("icon", "")
+    return i if i in LOGOS else ""
+
+
+def save_config(**values) -> None:
+    cfg = load_config()
+    cfg.update(values)
     path = config_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        f.write(f"theme={name}\n")
+        f.writelines(f"{k}={v}\n" for k, v in cfg.items())
 
 
 # ───────────────────────────── color picker (waves -c) ─────────────────────────────
@@ -734,18 +802,18 @@ def read_key(fd: int) -> str:
         ch = msvcrt.getwch()
         if ch in ("\x00", "\xe0"):  # arrows and special keys come as two characters
             return WIN_KEYS.get(msvcrt.getwch(), "")
-        return {"\t": "tab", "\r": "enter", "\x1b": "quit", "q": "quit", "\x03": "quit", "r": "r",
+        return {"\t": "tab", "\r": "enter", "\x1b": "quit", "q": "quit", "\x03": "quit", "r": "r", "i": "i",
                 "l": "right", "h": "left", "k": "up", "j": "down"}.get(ch, "")
     b = os.read(fd, 8)
     keys = {b"\x1b[C": "right", b"\x1b[D": "left", b"\x1b[A": "up", b"\x1b[B": "down",
             b"\x1bOC": "right", b"\x1bOD": "left", b"\x1bOA": "up", b"\x1bOB": "down",
             b"\t": "tab", b"\x1b[Z": "btab", b"\r": "enter", b"\n": "enter",
             b"\x1b": "quit", b"q": "quit", b"\x03": "quit",
-            b"l": "right", b"h": "left", b"k": "up", b"j": "down", b"r": "r"}
+            b"l": "right", b"h": "left", b"k": "up", b"j": "down", b"r": "r", b"i": "i"}
     return keys.get(b, "")
 
 
-def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str) -> str:
+def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str, icon: str = "wave") -> str:
     themes = TABS[tab][1]
     name = themes[idx]
     p = Painter(name, True)
@@ -781,8 +849,8 @@ def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str) -> str:
     right = p.dim(" ›") if hi < len(chips) - 1 else ""
     pos = p.dim(f"{idx + 1}/{len(themes)}")
 
-    body = render(data, p)
-    keys = p.dim("←/→ browse   tab category   r random   enter save   q quit")
+    body = render(data, p, icon=icon)
+    keys = p.dim(f"←/→ theme   tab category   i logo ({icon})   r random   enter save   q quit")
     note = ("  " + p.at(0.0, msg, bold=True)) if msg else ""
     return "\n".join([
         "", head, "",
@@ -792,7 +860,7 @@ def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str) -> str:
     ])
 
 
-def color_picker(data: dict, start: str) -> None:
+def color_picker(data: dict, start: str, icon: str = "wave") -> None:
     if not (sys.stdin.isatty() and sys.stdout.isatty()):
         sys.exit("waves -c: needs an interactive terminal")
     if not IS_WIN:
@@ -811,7 +879,7 @@ def color_picker(data: dict, start: str) -> None:
         if not IS_WIN:
             tty.setraw(fd)
         while True:
-            frame = picker_frame(data, tab, idx, saved, msg)
+            frame = picker_frame(data, tab, idx, saved, msg, icon)
             out.write("\x1b[H\x1b[2J" + frame.replace("\n", "\r\n"))
             out.flush()
             msg = ""
@@ -826,14 +894,17 @@ def color_picker(data: dict, start: str) -> None:
                 tab = (tab + (1 if k == "tab" else -1)) % len(TABS)
                 new = TABS[tab][1]
                 idx = new.index(current) if current in new else 0
+            elif k == "i":
+                names = list(LOGOS)
+                icon = names[(names.index(icon) + 1) % len(names)] if icon in names else names[0]
             elif k == "r":
                 import random
                 idx = random.randrange(len(themes))
             elif k == "enter":
                 saved = themes[idx]
                 try:
-                    save_theme(saved)
-                    msg = f"✓ saved {saved}"
+                    save_config(theme=saved, icon=icon)
+                    msg = f"✓ saved {saved} · {icon}"
                 except OSError as e:
                     msg = f"error: {e}"
             elif k == "quit":
@@ -854,6 +925,10 @@ def main() -> None:
     ap.add_argument("-c", "--color", action="store_true",
                     help="interactive theme picker (scroll through colors, enter to save)")
     ap.add_argument("--no-color", action="store_true", help="disable colors")
+    ap.add_argument("-i", "--icon", choices=list(LOGOS), metavar="LOGO",
+                    default=os.environ.get("WAVES_ICON") or load_icon() or "wave",
+                    help=f"wave logo: {', '.join(LOGOS)}")
+    ap.add_argument("--icons", action="store_true", help="preview every logo")
     ap.add_argument("--no-logo", action="store_true", help="hide the wave logo")
     ap.add_argument("--json", action="store_true", help="print raw data as JSON")
     ap.add_argument("--themes", nargs="?", const="all", metavar="TAG",
@@ -872,7 +947,7 @@ def main() -> None:
         print(json.dumps(data, indent=2))
         return
     if a.color:
-        color_picker(data, a.theme)
+        color_picker(data, a.theme, a.icon)
         return
     color = not a.no_color and (bool(os.environ.get("FORCE_COLOR"))
                                 or ("NO_COLOR" not in os.environ and sys.stdout.isatty() and vt_ok))
@@ -895,9 +970,15 @@ def main() -> None:
         for name in [n for n in THEMES if a.themes == "all" or a.themes in tags_of(n)]:
             p = Painter(name, bool(color))
             print(f"\n  {p.gradient(name, bold=True)}")
-            print(render(data, p, show_logo=not a.no_logo))
+            print(render(data, p, show_logo=not a.no_logo, icon=a.icon))
         return
-    print(render(data, Painter(a.theme, bool(color)), show_logo=not a.no_logo))
+    if a.icons:
+        p = Painter(a.theme, bool(color))
+        for name in LOGOS:
+            print(f"\n  {p.gradient(name, bold=True)}  {p.dim('waves -i ' + name)}")
+            print(render(data, p, icon=name))
+        return
+    print(render(data, Painter(a.theme, bool(color)), show_logo=not a.no_logo, icon=a.icon))
     if os.environ.get("WAVES_DEBUG"):
         print(f"  {(time.perf_counter() - t0) * 1000:.1f} ms")
 
