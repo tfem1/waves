@@ -11,11 +11,12 @@ END="# <<< waves (kitty) <<<"
 add_block() {  # $1 = fichier rc, $2 = contenu
     [ -f "$1" ] || { mkdir -p "$(dirname "$1")"; : > "$1"; }
     if grep -qF "$MARK" "$1"; then
-        echo "  déjà présent : $1"
+        sed -i.bak "/$MARK/,/$END/d" "$1" && rm -f "$1.bak"   # mise à jour du bloc
+        echo "  mis à jour  : $1"
     else
-        printf '\n%s\n%s\n%s\n' "$MARK" "$2" "$END" >> "$1"
         echo "  ajouté      : $1"
     fi
+    printf '\n%s\n%s\n%s\n' "$MARK" "$2" "$END" >> "$1"
 }
 
 remove_block() {
@@ -39,10 +40,10 @@ case ":$PATH:" in *":$DEST:"*) ;; *) echo "note : ajoute $DEST à ton PATH";; es
 
 if [ "$1" = "--kitty" ]; then
     echo "lancement automatique dans Kitty :"
-    SH_BLOCK="if [ -n \"\$KITTY_WINDOW_ID\" ] && [[ \$- == *i* ]] && [ -x \"$DEST/waves\" ]; then
+    SH_BLOCK="if { [ -n \"\$KITTY_WINDOW_ID\" ] || [ -n \"\$TSUNAMI\" ]; } && [[ \$- == *i* ]] && [ -x \"$DEST/waves\" ]; then
     \"$DEST/waves\"
 fi"
-    FISH_BLOCK="if status is-interactive; and set -q KITTY_WINDOW_ID; and test -x \"$DEST/waves\"
+    FISH_BLOCK="if status is-interactive; and begin; set -q KITTY_WINDOW_ID; or set -q TSUNAMI; end; and test -x \"$DEST/waves\"
     set -g fish_greeting  # waves remplace le message d'accueil de fish
     \"$DEST/waves\"
 end"

@@ -66,15 +66,19 @@ Respecte `NO_COLOR`. `FORCE_COLOR=1` force les couleurs (pipe, etc.).
 ./install.sh --kitty            # fish, bash et zsh détectés automatiquement
 ./install.sh --uninstall-kitty  # pour retirer
 ```
-waves ne s'affiche que dans une fenêtre Kitty interactive (`$KITTY_WINDOW_ID`) : pas dans les autres terminaux, ni en SSH, ni dans les scripts.
+waves ne s'affiche que dans une fenêtre Kitty ou tsunami interactive (`$KITTY_WINDOW_ID` / `$TSUNAMI`) : pas dans les autres terminaux, ni en SSH, ni dans les scripts.
 Avec fish, le message d'accueil (`fish_greeting`) est désactivé dans Kitty pour laisser la place à waves.
 
 Bloc ajouté à `~/.config/fish/config.fish` :
 ```fish
 # >>> waves (kitty) >>>
-if status is-interactive; and set -q KITTY_WINDOW_ID; and test -x "$HOME/.local/bin/waves"
+if status is-interactive; and begin; set -q KITTY_WINDOW_ID; or set -q TSUNAMI; end; and test -x "$HOME/.local/bin/waves"
     set -g fish_greeting
     "$HOME/.local/bin/waves"
 end
 # <<< waves (kitty) <<<
 ```
+
+## Avec le terminal tsunami
+Dans tsunami, waves suit automatiquement le thème du terminal, même quand tu le changes avec `tsunami -c`.
+Avec le thème clair `snow`, waves utilise `ink`, un thème foncé lisible sur fond blanc.

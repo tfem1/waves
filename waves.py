@@ -35,10 +35,11 @@ THEMES = {
     "lavender": [(225, 205, 255), (170, 130, 245), (115, 70, 200)],
     "amber":    [(255, 225, 150), (255, 175, 50), (200, 115, 10)],
     "teal":     [(170, 255, 240), (50, 210, 190), (15, 130, 125)],
+    "ink":      [(30, 34, 42), (70, 76, 90), (110, 116, 130)],  # pour fonds clairs
 }
 
 MONO_THEMES = ["mono", "snow", "graphite", "ice", "abyss", "matrix",
-               "ruby", "rose", "lavender", "amber", "teal"]
+               "ruby", "rose", "lavender", "amber", "teal", "ink"]
 
 LOGO = [
     "          ⢀⡠⡤⠤⢤⠤⣀             ",
@@ -397,6 +398,18 @@ def config_path() -> str:
     return os.path.join(base, "waves", "config")
 
 
+def tsunami_theme() -> str:
+    """Dans le terminal tsunami, waves suit le thème du terminal (live)."""
+    path = os.environ.get("TSUNAMI_CONFIG")
+    if not path:
+        return ""
+    for line in read(path).splitlines():
+        k, _, v = line.split("#", 1)[0].partition("=")
+        if k.strip() == "theme" and v.strip() in THEMES:
+            return {"snow": "ink"}.get(v.strip(), v.strip())  # fond clair → encre foncée
+    return ""
+
+
 def load_theme() -> str:
     for line in read(config_path()).splitlines():
         k, _, v = line.partition("=")
@@ -528,7 +541,7 @@ def color_picker(data: dict, start: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(prog="waves", description="A minimal, good-looking system fetch.")
     ap.add_argument("-t", "--theme", choices=THEMES,
-                    default=os.environ.get("WAVES_THEME") or load_theme() or "ocean")
+                    default=os.environ.get("WAVES_THEME") or tsunami_theme() or load_theme() or "ocean")
     ap.add_argument("-c", "--color", action="store_true",
                     help="interactive theme picker (scroll through colors, enter to save)")
     ap.add_argument("--no-color", action="store_true", help="disable colors")
