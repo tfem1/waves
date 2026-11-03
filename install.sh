@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# waves installer for Linux (Windows: install.ps1)
 # Installs waves into ~/.local/bin (or $PREFIX/bin).
 #   ./install.sh                     install the waves command
 #   ./install.sh --kitty             + show waves when Kitty opens
