@@ -18,28 +18,69 @@ __version__ = "0.1.0"
 
 # ───────────────────────────── themes ─────────────────────────────
 
+# Shared with the tsunami terminal: same names, same accents.
+# ── themes:begin ──
 THEMES = {
-    "ocean":  [(0, 210, 255), (58, 123, 213), (120, 80, 220)],
-    "sunset": [(255, 175, 90), (255, 95, 109), (190, 70, 160)],
-    "mint":   [(150, 255, 200), (60, 200, 170), (40, 120, 170)],
-    "aurora": [(130, 255, 160), (60, 200, 255), (200, 110, 255)],
-    "mono":   [(230, 230, 230), (160, 160, 160), (100, 100, 100)],
-    # ── monochrome: one hue, light → deep ──
-    "snow":     [(255, 255, 255), (235, 235, 240), (200, 200, 210)],
-    "graphite": [(200, 200, 205), (150, 150, 158), (110, 110, 118)],
-    "ice":      [(200, 235, 255), (110, 180, 245), (40, 110, 210)],
-    "abyss":    [(120, 160, 255), (75, 105, 230), (55, 70, 190)],
-    "matrix":   [(180, 255, 180), (60, 220, 90), (20, 140, 50)],
-    "ruby":     [(255, 170, 170), (235, 70, 80), (160, 20, 40)],
-    "rose":     [(255, 200, 225), (245, 120, 170), (200, 60, 120)],
-    "lavender": [(225, 205, 255), (170, 130, 245), (115, 70, 200)],
-    "amber":    [(255, 225, 150), (255, 175, 50), (200, 115, 10)],
-    "teal":     [(170, 255, 240), (50, 210, 190), (15, 130, 125)],
-    "ink":      [(30, 34, 42), (70, 76, 90), (110, 116, 130)],  # pour fonds clairs
+    # sea — gradients drawn from the ocean
+    "tsunami":   ("sea", [(180, 250, 255), (0, 190, 255), (30, 80, 200)]),
+    "ocean":     ("sea", [(0, 210, 255), (58, 123, 213), (120, 80, 220)]),
+    "lagoon":    ("sea", [(150, 255, 235), (40, 215, 210), (20, 140, 170)]),
+    "reef":      ("sea", [(255, 150, 120), (255, 100, 140), (60, 200, 215)]),
+    "deepsea":   ("sea", [(70, 200, 255), (40, 110, 220), (40, 50, 150)]),
+    "biolume":   ("sea", [(130, 255, 230), (40, 180, 255), (170, 100, 255)]),
+    "seafoam":   ("sea", [(220, 255, 245), (140, 230, 210), (80, 175, 185)]),
+    "kelp":      ("sea", [(200, 235, 130), (90, 180, 115), (40, 125, 110)]),
+    "storm":     ("sea", [(210, 222, 235), (120, 145, 175), (80, 95, 135)]),
+    "arctic":    ("sea", [(235, 250, 255), (150, 215, 245), (90, 150, 225)]),
+    "tropic":    ("sea", [(255, 225, 120), (70, 225, 200), (30, 150, 230)]),
+    "riptide":   ("sea", [(0, 255, 200), (0, 170, 255), (80, 80, 235)]),
+    "maelstrom": ("sea", [(90, 220, 255), (130, 100, 255), (235, 70, 180)]),
+    "nautilus":  ("sea", [(255, 215, 170), (235, 150, 100), (170, 90, 80)]),
+    "pearl":     ("sea light", [(40, 110, 170), (110, 90, 180), (170, 80, 130)],
+                  ((246, 248, 252), (228, 234, 247))),
+    "sandbar":   ("sea light", [(20, 120, 140), (200, 110, 40), (180, 70, 70)],
+                  ((250, 245, 233), (236, 225, 203))),
+    # gradient
+    "sunset":    ("gradient", [(255, 175, 90), (255, 95, 109), (190, 70, 160)]),
+    "mint":      ("gradient", [(150, 255, 200), (60, 200, 170), (40, 120, 170)]),
+    "aurora":    ("gradient", [(130, 255, 160), (60, 200, 255), (200, 110, 255)]),
+    "synthwave": ("gradient", [(255, 90, 200), (150, 90, 255), (40, 210, 255)]),
+    "dusk":      ("gradient", [(255, 175, 125), (205, 105, 170), (100, 80, 170)]),
+    "candy":     ("gradient", [(255, 160, 205), (205, 165, 255), (140, 220, 255)]),
+    "ember":     ("gradient", [(255, 220, 120), (255, 125, 60), (205, 45, 65)]),
+    "forest":    ("gradient", [(205, 240, 150), (95, 190, 125), (45, 115, 95)]),
+    "nebula":    ("gradient", [(255, 125, 225), (150, 95, 255), (70, 185, 255)]),
+    "citrus":    ("gradient", [(255, 240, 120), (185, 240, 95), (65, 200, 125)]),
+    "vapor":     ("gradient", [(120, 255, 230), (255, 145, 220), (165, 125, 255)]),
+    "peach":     ("gradient light", [(200, 90, 90), (210, 120, 60), (150, 90, 160)],
+                  ((252, 244, 238), (243, 228, 224))),
+    # mono — one hue, light → deep
+    "mono":      ("mono", [(230, 230, 230), (160, 160, 160), (100, 100, 100)]),
+    "snow":      ("mono", [(255, 255, 255), (235, 235, 240), (200, 200, 210)]),
+    "graphite":  ("mono", [(200, 200, 205), (150, 150, 158), (110, 110, 118)]),
+    "ice":       ("mono", [(200, 235, 255), (110, 180, 245), (40, 110, 210)]),
+    "abyss":     ("mono", [(120, 160, 255), (75, 105, 230), (55, 70, 190)]),
+    "matrix":    ("mono", [(180, 255, 180), (60, 220, 90), (20, 140, 50)]),
+    "ruby":      ("mono", [(255, 170, 170), (235, 70, 80), (160, 20, 40)]),
+    "rose":      ("mono", [(255, 200, 225), (245, 120, 170), (200, 60, 120)]),
+    "lavender":  ("mono", [(225, 205, 255), (170, 130, 245), (115, 70, 200)]),
+    "amber":     ("mono", [(255, 225, 150), (255, 175, 50), (200, 115, 10)]),
+    "teal":      ("mono", [(170, 255, 240), (50, 210, 190), (15, 130, 125)]),
+    "paper":     ("mono light", [(30, 34, 42), (70, 76, 90), (110, 116, 130)],
+                  ((246, 244, 238), (234, 230, 220))),
 }
+TAGS = ["sea", "gradient", "mono", "light"]
 
-MONO_THEMES = ["mono", "snow", "graphite", "ice", "abyss", "matrix",
-               "ruby", "rose", "lavender", "amber", "teal", "ink"]
+
+def tags_of(name: str) -> list[str]:
+    return THEMES[name][0].split()
+
+
+def stops_of(name: str):
+    return THEMES[name][1]
+# ── themes:end ──
+
+MONO_THEMES = [n for n in THEMES if "mono" in tags_of(n)]
 
 LOGO = [
     "          ⢀⡠⡤⠤⢤⠤⣀             ",
@@ -62,7 +103,7 @@ DIM = "\x1b[2m"
 
 class Painter:
     def __init__(self, theme: str, enabled: bool):
-        self.stops = THEMES[theme]
+        self.stops = stops_of(theme)
         self.on = enabled
 
     def lerp(self, t: float):
@@ -399,15 +440,17 @@ def config_path() -> str:
 
 
 def tsunami_theme() -> str:
-    """Dans le terminal tsunami, waves suit le thème du terminal (live)."""
-    path = os.environ.get("TSUNAMI_CONFIG")
-    if not path:
+    """Inside the tsunami terminal, waves follows the window's theme (live)."""
+    if not os.environ.get("TSUNAMI"):
         return ""
-    for line in read(path).splitlines():
-        k, _, v = line.split("#", 1)[0].partition("=")
-        if k.strip() == "theme" and v.strip() in THEMES:
-            return {"snow": "ink"}.get(v.strip(), v.strip())  # fond clair → encre foncée
-    return ""
+    path = os.environ.get("TSUNAMI_CONFIG")
+    if path and not os.environ.get("TSUNAMI_THEME_PINNED"):
+        for line in read(path).splitlines():
+            k, _, v = line.split("#", 1)[0].partition("=")
+            if k.strip() == "theme" and v.strip() in THEMES:
+                return v.strip()
+    t = os.environ.get("TSUNAMI_THEME", "")
+    return t if t in THEMES else ""
 
 
 def load_theme() -> str:
@@ -427,9 +470,7 @@ def save_theme(name: str) -> None:
 
 # ───────────────────────────── color picker (waves -c) ─────────────────────────────
 
-TABS = [("tous", list(THEMES)),
-        ("dégradés", [t for t in THEMES if t not in MONO_THEMES]),
-        ("mono", MONO_THEMES)]
+TABS = [("all", list(THEMES))] + [(tg, [n for n in THEMES if tg in tags_of(n)]) for tg in TAGS]
 
 
 def read_key(fd: int) -> str:
@@ -438,7 +479,7 @@ def read_key(fd: int) -> str:
             b"\x1bOC": "right", b"\x1bOD": "left", b"\x1bOA": "up", b"\x1bOB": "down",
             b"\t": "tab", b"\x1b[Z": "btab", b"\r": "enter", b"\n": "enter",
             b"\x1b": "quit", b"q": "quit", b"\x03": "quit",
-            b"l": "right", b"h": "left", b"k": "up", b"j": "down"}
+            b"l": "right", b"h": "left", b"k": "up", b"j": "down", b"r": "r"}
     return keys.get(b, "")
 
 
@@ -448,13 +489,13 @@ def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str) -> str:
     p = Painter(name, True)
     cols = shutil.get_terminal_size((100, 30)).columns
 
-    # onglets
+    # category tabs
     tabs = []
     for i, (label, _) in enumerate(TABS):
         tabs.append(p.at(0.2, f" {label} ", bold=True) if i == tab else p.dim(f" {label} "))
-    head = f"  {p.gradient('waves', bold=True)} {p.dim('·')} {p.dim('couleurs')}     " + p.dim("│").join(tabs)
+    head = f"  {p.gradient('waves', bold=True)} {p.dim('·')} {p.dim('themes')}     " + p.dim("│").join(tabs)
 
-    # bande des thèmes, défilante autour de la sélection
+    # theme strip, scrolling around the selection
     chips = []
     for i, t in enumerate(themes):
         tp = Painter(t, True)
@@ -479,7 +520,7 @@ def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str) -> str:
     pos = p.dim(f"{idx + 1}/{len(themes)}")
 
     body = render(data, p)
-    keys = p.dim("←/→ thème   tab onglet   entrée sauvegarder   q quitter")
+    keys = p.dim("←/→ browse   tab category   r random   enter save   q quit")
     note = ("  " + p.at(0.0, msg, bold=True)) if msg else ""
     return "\n".join([
         "", head, "",
@@ -491,7 +532,7 @@ def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str) -> str:
 
 def color_picker(data: dict, start: str) -> None:
     if not (sys.stdin.isatty() and sys.stdout.isatty()):
-        sys.exit("waves -c : nécessite un terminal interactif")
+        sys.exit("waves -c: needs an interactive terminal")
     import termios
     import tty
 
@@ -502,7 +543,7 @@ def color_picker(data: dict, start: str) -> None:
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     out = sys.stdout
-    out.write("\x1b[?1049h\x1b[?25l")  # écran alternatif + curseur caché
+    out.write("\x1b[?1049h\x1b[?25l")  # alternate screen, hidden cursor
     try:
         tty.setraw(fd)
         while True:
@@ -521,13 +562,16 @@ def color_picker(data: dict, start: str) -> None:
                 tab = (tab + (1 if k == "tab" else -1)) % len(TABS)
                 new = TABS[tab][1]
                 idx = new.index(current) if current in new else 0
+            elif k == "r":
+                import random
+                idx = random.randrange(len(themes))
             elif k == "enter":
                 saved = themes[idx]
                 try:
                     save_theme(saved)
-                    msg = f"✓ {saved} sauvegardé"
+                    msg = f"✓ saved {saved}"
                 except OSError as e:
-                    msg = f"erreur : {e}"
+                    msg = f"error: {e}"
             elif k == "quit":
                 break
     finally:
@@ -535,7 +579,7 @@ def color_picker(data: dict, start: str) -> None:
         out.write("\x1b[?25h\x1b[?1049l")
         out.flush()
     if saved:
-        print(f"  thème par défaut : {Painter(saved, True).gradient(saved, bold=True)}")
+        print(f"  default theme: {Painter(saved, True).gradient(saved, bold=True)}")
 
 
 def main() -> None:
@@ -547,9 +591,10 @@ def main() -> None:
     ap.add_argument("--no-color", action="store_true", help="disable colors")
     ap.add_argument("--no-logo", action="store_true", help="hide the wave logo")
     ap.add_argument("--json", action="store_true", help="print raw data as JSON")
-    ap.add_argument("--themes", action="store_true", help="preview every theme")
-    ap.add_argument("--mono-themes", action="store_true", help="preview monochrome themes only")
-    ap.add_argument("-l", "--list-themes", action="store_true", help="list theme names")
+    ap.add_argument("--themes", nargs="?", const="all", metavar="TAG",
+                    help="preview every theme (or only: sea, gradient, mono, light)")
+    ap.add_argument("--mono-themes", action="store_true", help=argparse.SUPPRESS)
+    ap.add_argument("-l", "--list-themes", action="store_true", help="list themes by category")
     ap.add_argument("-V", "--version", action="version", version=f"waves {__version__}")
     a = ap.parse_args()
     if a.theme not in THEMES:
@@ -567,13 +612,21 @@ def main() -> None:
                                 or ("NO_COLOR" not in os.environ and sys.stdout.isatty()))
     if a.list_themes:
         p = Painter("ocean", bool(color))
-        for name, stops in THEMES.items():
-            sw = "".join(Painter(name, bool(color)).at(i / 5, "██") for i in range(6))
-            tag = p.dim("mono") if name in MONO_THEMES else ""
-            print(f"  {name:<9} {sw}  {tag}")
+        for tg in TAGS[:3]:
+            names = [n for n in THEMES if tg in tags_of(n)]
+            print(f"\n  {BOLD if color else ''}{tg}{RESET if color else ''} {p.dim(str(len(names)))}")
+            for name in names:
+                sw = "".join(Painter(name, bool(color)).at(i / 11, "█") for i in range(12))
+                light = p.dim("light") if "light" in tags_of(name) else ""
+                print(f"  {name:<10} {sw}  {light}")
+        print()
         return
-    if a.themes or a.mono_themes:
-        for name in (MONO_THEMES if a.mono_themes else THEMES):
+    if a.mono_themes:
+        a.themes = "mono"
+    if a.themes:
+        if a.themes != "all" and a.themes not in TAGS:
+            sys.exit(f"waves: tags are {', '.join(TAGS)}")
+        for name in [n for n in THEMES if a.themes == "all" or a.themes in tags_of(n)]:
             p = Painter(name, bool(color))
             print(f"\n  {p.gradient(name, bold=True)}")
             print(render(data, p, show_logo=not a.no_logo))

@@ -1,37 +1,24 @@
-# Prompts — waves
+# Prompts
 
-## 1. Les prompts envoyés (dans l'ordre)
+## 1. The prompts that built waves and tsunami (verbatim, in order)
 
-**Prompt 1**
-> fesont un project le but sera d avoir une sorte de fastfetch sa dira l'os/distro le kernel et la ram et les composant graphique (ram cpu gpu 1/2 disk carte mere) je veux un design sympas le nom sera waves je veux pouvoir avoir un belle interface minimalist
-
-**Prompt 2**
-> FAIS DES THEMES MONOCHROME AUSSI
+1. > fesont un project le but sera d avoir une sorte de fastfetch sa dira l'os/distro le kernel et la ram et les composant graphique (ram cpu gpu 1/2 disk carte mere) je veux un design sympas le nom sera waves je veux pouvoir avoir un belle interface minimalist
+2. > FAIS DES THEMES MONOCHROME AUSSI
+3. > envoie les prompt
+4. > waves.py
+5. > fais un onglet en mode waves -c pour color et je peux faire defiler les couleur
+6. > ameliore le logo fais plutot un tsunami : *(braille tsunami art)*
+7. > je veux que waves souvre quand j open kitty
+8. > fish shell
+9. > creer mon propre terminal je veux quelque chose de sobre et vraiment tres minimalist mais avec de belle custom un peux comme waves du genre on va l appeler tsunami et je veux quil yest des commande tsunami -c ect jai confiance en toi!
+10. > pas mal mais ajoute y quelque chose quand meme plus de themes et plus d option rend le bien mieux fais des themes avec gradience et en themes avec la mere et rend le tout en anglais et ajoute des specificiter
 
 ---
 
-## 2. Prompt complet pour recréer waves d'un coup
+## 2. One prompt to rebuild both projects
 
-> Crée un outil en ligne de commande nommé **waves**, une alternative minimaliste à fastfetch.
+> Build two companion Linux tools in English, sharing one table of 40 themes (categories: sea, gradient, mono, light; each theme = 3 accent colors, light themes also get a background pair).
 >
-> **Technique**
-> - Un seul fichier Python 3, sans aucune dépendance externe, exécutable (`waves.py`) + un `install.sh` qui l'installe dans `~/.local/bin/waves`.
-> - Linux en priorité : lire `/etc/os-release`, `/proc/cpuinfo`, `/proc/meminfo`, `/proc/uptime`, `/sys/block`, `/sys/class/dmi/id`. Utiliser `lspci -mm` pour les GPU s'il existe, sinon fallback via `/sys/bus/pci/devices` (classe 0x03).
+> **waves** — a zero-dependency, single-file Python system fetch like fastfetch. Show user@host, OS/distro, kernel, uptime, shell, motherboard, CPU, up to 2 GPUs, RAM with a gradient bar, up to 2 disks and `/` usage. Draw a braille tsunami logo on the left with a diagonal truecolor gradient and "w a v e s" under it. Options: `-t`, `-c` (full-screen theme picker with category tabs, random, save to config), `-l`, `--themes [tag]`, `--no-logo`, `--no-color`, `--json`. Respect NO_COLOR / FORCE_COLOR. Inside the tsunami terminal, follow the window theme. `install.sh --kitty` adds an autostart block for fish/bash/zsh that only runs in interactive Kitty or tsunami windows.
 >
-> **Infos à afficher**
-> `user@host`, OS/distro + architecture, kernel, uptime, shell, carte mère (vendeur + modèle, filtrer les valeurs bidon type "To be filled by O.E.M."), CPU (modèle nettoyé, cœurs/threads, fréquence max), GPU 1 et 2, RAM utilisée/totale avec barre et pourcentage, disque 1 et 2 (taille, type NVMe/SSD/HDD, modèle ; ignorer loop/zram/ram), usage de la partition `/` avec barre.
->
-> **Design**
-> - Logo ASCII à gauche : trois lignes de vagues empilées (`.~~.` / `.~'    '~.` / `~~'    '~~~'`), avec « w a v e s » en dessous. Infos alignées à droite, centrées verticalement.
-> - Couleurs truecolor en dégradé : le logo, le titre et les libellés suivent un dégradé ; les valeurs restent en couleur normale ; les détails secondaires en atténué (dim).
-> - Barres d'usage fines `━━━━──────` en dégradé, alignées entre elles.
-> - Une ligne de 8 points `●` de la palette en bas.
->
-> **Thèmes**
-> - Dégradés : `ocean` (défaut, cyan → bleu → violet), `sunset`, `mint`, `aurora`.
-> - Monochromes (une seule teinte, du clair au foncé, lisibles sur fond sombre) : `mono`, `snow`, `graphite`, `ice`, `abyss`, `matrix`, `ruby`, `rose`, `lavender`, `amber`, `teal`.
->
-> **Options CLI**
-> `-t/--theme`, `-l/--list-themes` (nom + échantillon de couleur), `--themes` (aperçu de tous), `--mono-themes` (aperçu des monochromes), `--no-logo`, `--no-color`, `--json`, `-V/--version`. Thème par défaut via `WAVES_THEME`. Respecter `NO_COLOR`, `FORCE_COLOR=1` force les couleurs, pas de couleur si la sortie n'est pas un terminal.
->
-> Ajoute un README en français avec un exemple de sortie, l'installation, les options et la liste des thèmes.
+> **tsunami** — a quiet, minimalist GTK3 + VTE terminal (Python, PyGObject, pycairo). No scrollbar, menus or tabs. Gradient backgrounds drawn behind VTE (`set_clear_background(False)`): linear with angle, radial glow, or solid, with intensity and opacity. Build a full 16-color palette per theme. Live config reload for every window. CLI: `-c` theme picker, `-f` font picker, `-s` settings menu, `-l [tag]`, `-t` (also random, random:tag, auto day/night), `--font`, `--set`, `--get`, `--export kitty|alacritty|foot|ghostty`, `--reset`, `--config`, `-e`. Window features: wave/flash visual bell, toasts, scrollback search, focus dimming, copy on select, new window in the same directory, per-window theme cycling and random, opacity and background cycling, zoom, fullscreen, ctrl+click links. Ship an installer with an SVG icon and a .desktop entry.

@@ -1,75 +1,57 @@
 # 🌊 waves
 
-Un *fetch* système minimaliste et joli, à la fastfetch. Un seul fichier Python, **zéro dépendance**.
+A minimal, good-looking system fetch, in the spirit of fastfetch. One Python file, **zero dependencies**.
 
-```
-            ⢀⡠⡤⠤⢤⠤⣀                user@host
-         ⢀⡤⣺⣽⣾⣾⣔⣒⣷⡡⠱⢄              ────────────────────────
-        ⣠⣾⣾⢯⣞⣣⢟⣹⣿⣿⣷⢋⡔⢋⠂⡄           os      Arch Linux x86_64
-       ⣴⣟⡶⣏⡿⣔⢫⣾⣿⣿⣿⣿⣷⣷⡉⠜⠃           kernel  Linux 6.18.2
-      ⣰⡿⡞⡙⢾⢻⣌⣻⣿⣿⣿⠟⢉⢹⣷⡿⣹⠉⠓          board   ASUS ROG STRIX B650-A
-    ⢠⣤⠿⡽⢛⡧⡶⣦⣉⢹⣿⣽⣿⡄⠈⣟⡉⠚⠁⠙           cpu     AMD Ryzen 7 7800X3D (8c/16t)
-  ⠠⣴⡿⢷⠟⠍⠩⠞⢧⣭⡻⢦⡿⣿⣿⣷⣄⠈⠉              gpu     NVIDIA GeForce RTX 4070
-  ⠸⢟⣡⠢⢌⠂⢇⣭⢂⢹⡿⣧⣟⢶⢭⠿⣿⣷⣤⣀⡀   ⣀⣤⣤⣤⣠⡄   ram     9.2 GiB / 31.1 GiB    ━━━━────────── 30%
-  ⠈⢶⢭⣗⣮⢻⣭⢮⢯⣳⣳⣽⣻⣟⢿⢿⣴⣯⢿⣹⣟⢿⡻⣟⠿⣭⣯⡟⠞    disk1   2.0 TB NVMe · Samsung SSD 990 PRO
-    ⠉⠙⠛⠛⠚⠛⠛⠓⠛⠓⠛⠛⠛⠛⠛⠓⠛⠛⠛⠛⠋⠉⠉⠉       disk2   1.0 TB SSD · Crucial MX500
-            w a v e s
-```
+![preview](preview.png)
 
-![aperçu](preview.png)
+## What it shows
+OS / distro · kernel · uptime · shell · motherboard · CPU · GPU (up to 2) · RAM (with a bar) · disks (up to 2) · `/` usage
 
-## Infos affichées
-OS / distro · kernel · uptime · shell · carte mère · CPU · GPU (jusqu'à 2) · RAM (avec barre) · disques (jusqu'à 2) · usage de `/`
-
-## Installation
+## Install
 ```sh
-./install.sh          # installe dans ~/.local/bin/waves
+./install.sh            # installs ~/.local/bin/waves
+./install.sh --kitty    # also show waves whenever Kitty or tsunami opens
 ```
 
-## Utilisation
+## Usage
 ```sh
-waves                 # thème ocean par défaut
-waves -c              # sélecteur de couleurs interactif
-waves -t sunset       # choisir un thème
-waves -l              # lister les thèmes avec leur palette
-waves --themes        # aperçu de tous les thèmes
-waves --mono-themes   # aperçu des thèmes monochromes
-waves --no-logo       # infos seules
+waves                   # default theme
+waves -c                # interactive theme picker
+waves -t reef           # pick a theme
+waves -l                # list themes by category
+waves --themes sea      # preview a category (sea, gradient, mono, light) or all
+waves --no-logo
 waves --no-color
-waves --json          # sortie brute en JSON
+waves --json            # raw data
 ```
-### Sélecteur de couleurs (`waves -c`)
-Écran interactif avec aperçu en direct :
 
-| Touche | Action |
+### Theme picker (`waves -c`)
+| Key | Action |
 |---|---|
-| `←` `→` (ou `h` `l`, `↑` `↓`) | faire défiler les thèmes |
-| `Tab` / `Shift+Tab` | changer d'onglet : tous · dégradés · mono |
-| `Entrée` | sauvegarder comme thème par défaut |
-| `q` / `Échap` | quitter |
+| `←` `→` | browse themes |
+| `Tab` / `Shift+Tab` | switch category: all · sea · gradient · mono · light |
+| `r` | random theme |
+| `Enter` | save as default (`~/.config/waves/config`) |
+| `q` / `Esc` | quit |
 
-Le thème est enregistré dans `~/.config/waves/config` (marqué d'une `*` dans le sélecteur).
-Priorité : `-t` > `WAVES_THEME` > config > `ocean`.
+Priority: `-t` > `WAVES_THEME` > tsunami theme > saved config > `ocean`.
 
-### Thèmes
-- **Dégradés** : `ocean` · `sunset` · `mint` · `aurora`
-- **Monochromes** (une seule teinte, du clair au foncé) : `mono` · `snow` · `graphite` · `ice` · `abyss` · `matrix` · `ruby` · `rose` · `lavender` · `amber` · `teal`
+### Themes (40)
+- **sea** — `tsunami` `ocean` `lagoon` `reef` `deepsea` `biolume` `seafoam` `kelp` `storm` `arctic` `tropic` `riptide` `maelstrom` `nautilus` `pearl` `sandbar`
+- **gradient** — `sunset` `mint` `aurora` `synthwave` `dusk` `candy` `ember` `forest` `nebula` `citrus` `vapor` `peach`
+- **mono** — `mono` `snow` `graphite` `ice` `abyss` `matrix` `ruby` `rose` `lavender` `amber` `teal` `paper`
+- **light** (for light terminals) — `pearl` `sandbar` `peach` `paper`
 
-Thème par défaut aussi possible via variable d'env : `export WAVES_THEME=aurora`.
-Respecte `NO_COLOR`. `FORCE_COLOR=1` force les couleurs (pipe, etc.).
+Respects `NO_COLOR`; `FORCE_COLOR=1` forces colors. Needs a truecolor terminal and a font with braille glyphs (JetBrains Mono, Nerd Fonts, DejaVu, Fira Code…). GPU names use `lspci` (`pciutils`) when available.
 
-> Nécessite un terminal *truecolor* (Kitty, Alacritty, WezTerm, GNOME Terminal, Konsole…).
-> Les noms de GPU utilisent `lspci` (paquet `pciutils`) s'il est présent, sinon un fallback via `/sys`.
-
-## Lancer waves à l'ouverture de Kitty
+## Autostart in Kitty and tsunami
 ```sh
-./install.sh --kitty            # fish, bash et zsh détectés automatiquement
-./install.sh --uninstall-kitty  # pour retirer
+./install.sh --kitty            # fish, bash and zsh are detected
+./install.sh --uninstall-kitty  # remove it
 ```
-waves ne s'affiche que dans une fenêtre Kitty ou tsunami interactive (`$KITTY_WINDOW_ID` / `$TSUNAMI`) : pas dans les autres terminaux, ni en SSH, ni dans les scripts.
-Avec fish, le message d'accueil (`fish_greeting`) est désactivé dans Kitty pour laisser la place à waves.
+waves only shows up in interactive Kitty or tsunami windows (`$KITTY_WINDOW_ID` / `$TSUNAMI`): not in other terminals, over SSH, or in scripts. With fish, the greeting is turned off in those windows.
 
-Bloc ajouté à `~/.config/fish/config.fish` :
+Block added to `~/.config/fish/config.fish`:
 ```fish
 # >>> waves (kitty) >>>
 if status is-interactive; and begin; set -q KITTY_WINDOW_ID; or set -q TSUNAMI; end; and test -x "$HOME/.local/bin/waves"
@@ -79,6 +61,5 @@ end
 # <<< waves (kitty) <<<
 ```
 
-## Avec le terminal tsunami
-Dans tsunami, waves suit automatiquement le thème du terminal, même quand tu le changes avec `tsunami -c`.
-Avec le thème clair `snow`, waves utilise `ink`, un thème foncé lisible sur fond blanc.
+## With the tsunami terminal
+waves shares its 40 themes with [tsunami](../tsunami) and follows the window's theme automatically, even when you change it live with `tsunami -c`.
