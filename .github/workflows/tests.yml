@@ -1,0 +1,149 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  PYTHONIOENCODING: utf-8
+  WAVES_NO_UPDATE: "1"
+
+jobs:
+  # waves itself, on real Linux and real Windows, oldest and newest supported Python.
+  run:
+    name: ${{ matrix.os }} · python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Fetch
+        run: python waves.py --no-color
+
+      - name: Every logo and a theme category
+        run: |
+          python waves.py --icons --no-color
+          python waves.py --themes sea --no-color
+          python waves.py -l --no-color
+
+      - name: Detected values make sense
+        shell: bash
+        run: |
+          python waves.py --json > info.json
+          cat info.json
+          python - <<'EOF'
+          import json, sys
+          d = json.load(open("info.json", encoding="utf-8"))
+          win = sys.platform == "win32"
+          problems = []
+          def need(ok, what):
+              if not ok:
+                  problems.append(what)
+          need(d["os"], "os is empty")
+          need(d["kernel"], "kernel is empty")
+          need(d["cpu"], "cpu is empty")
+          need(d["memory"]["total"] > 0, "memory total is 0")
+          need(0 < d["memory"]["used"] <= d["memory"]["total"], "memory used is wrong")
+          need(d["root"]["total"] > 0, "system drive size is 0")
+          need(d["uptime"], "uptime is empty")
+          if win:
+              need(d["os"].startswith("Windows"), "os should start with Windows: " + d["os"])
+              need(d["kernel"].startswith("Windows NT 10.0."), "kernel should be Windows NT 10.0.x: " + d["kernel"])
+              need(d["root"]["label"] == "C:", "system drive should be C:")
+              need(d["disks"], "no disk found")
+          if problems:
+              sys.exit("problems:\n  " + "\n  ".join(problems))
+          print("all good:", d["os"], "·", d["kernel"], "·", d["cpu"], "·", d["shell"] or "(no shell)")
+          EOF
+
+  # Every install method from the README, run exactly as a user would.
+  install-windows:
+    name: install · windows · ${{ matrix.shell }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [powershell, pwsh]   # Windows PowerShell 5.1 (built into Windows 10/11) and PowerShell 7
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    env:
+      RAW: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: install.ps1 -Startup from the repo
+        run: |
+          powershell -ExecutionPolicy Bypass -File install.ps1 -Startup
+          $dir = Join-Path $env:LOCALAPPDATA "Programs\waves"
+          if (-not (Test-Path "$dir\waves.cmd")) { throw "waves.cmd missing" }
+          $env:Path = "$env:Path;$dir"
+          waves --no-color
+          if ($LASTEXITCODE -ne 0) { throw "waves failed" }
+          $profiles = Get-ChildItem ([Environment]::GetFolderPath("MyDocuments")) -Recurse -Filter "*_profile.ps1" | Select-String "waves" -List
+          if (-not $profiles) { throw "startup block missing from the PowerShell profile" }
+          Write-Host "startup block found in: $($profiles.Path -join ', ')"
+          powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall
+          if (Test-Path $dir) { throw "uninstall left $dir behind" }
+
+      - name: One-line install (irm | iex), like the README
+        run: |
+          $env:WAVES_SRC = "$env:RAW/waves.py"
+          irm "$env:RAW/install.ps1" | iex
+          waves --no-color
+          if ($LASTEXITCODE -ne 0) { throw "waves failed after irm | iex" }
+          waves -V
+          Write-Host "this window is still open after iex: good"
+
+      - name: waves --update replaces the installed copy
+        run: |
+          $dir = Join-Path $env:LOCALAPPDATA "Programs\waves"
+          $newer = Join-Path $env:RUNNER_TEMP "waves-newer.py"
+          (Get-Content "$dir\waves.py" -Raw) -replace '__version__ = "[^"]+"', '__version__ = "9.9.9"' | Set-Content -Encoding UTF8 $newer
+          $env:WAVES_UPDATE_URL = "file:///" + ($newer -replace '\\', '/')
+          waves --update
+          $v = waves -V
+          if ("$v" -notmatch "9\.9\.9") { throw "update did not install: $v" }
+          Write-Host "updated: $v"
+
+      - name: One-line uninstall
+        run: |
+          $env:WAVES_UNINSTALL = 1
+          irm "$env:RAW/install.ps1" | iex
+          if (Test-Path (Join-Path $env:LOCALAPPDATA "Programs\waves")) { throw "still installed" }
+
+  install-linux:
+    name: install · linux
+    runs-on: ubuntu-latest
+    env:
+      SHELL: /bin/bash
+      RAW: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}
+    steps:
+      - name: git clone + ./install.sh --kitty
+        run: |
+          cd "$RUNNER_TEMP"
+          git clone -q https://github.com/${{ github.repository }} waves && cd waves
+          git checkout -q "$GITHUB_SHA"
+          ./install.sh --kitty
+          ~/.local/bin/waves --no-color
+          grep -q "waves (kitty)" ~/.bashrc
+          ./install.sh --uninstall
+          test ! -e ~/.local/bin/waves
+
+      - name: One-line install (curl | sh), like the README
+        run: |
+          curl -fsSL "$RAW/install.sh" | WAVES_SRC="$RAW/waves.py" sh
+          ~/.local/bin/waves --no-color
+          ~/.local/bin/waves --update | tee update.txt
+          grep -q "up to date" update.txt

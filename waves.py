@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 UPDATE_URL = "https://raw.githubusercontent.com/tfem1/waves/main/waves.py"
 
 # ───────────────────────────── themes ─────────────────────────────
@@ -856,7 +856,7 @@ def fetch_latest(timeout=6):
     url = os.environ.get("WAVES_UPDATE_URL") or UPDATE_URL
     req = urllib.request.Request(url, headers={"User-Agent": f"waves/{__version__}"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
-        text = r.read(2_000_000).decode("utf-8")
+        text = r.read(2_000_000).decode("utf-8").lstrip("\ufeff")  # files saved by PowerShell 5 start with a BOM
     m = re.search(r'^__version__\s*=\s*"([^"]+)"', text, re.M)
     if not m:
         raise ValueError("the downloaded file is not waves")

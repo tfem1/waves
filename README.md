@@ -1,6 +1,8 @@
 # 🌊 waves
 
-A minimal, good-looking system fetch, in the spirit of fastfetch. One Python file, **zero dependencies**, for **Linux and Windows**.
+[![tests](https://github.com/tfem1/waves/actions/workflows/tests.yml/badge.svg)](https://github.com/tfem1/waves/actions/workflows/tests.yml)
+
+A minimal, good-looking system fetch, in the spirit of fastfetch. One Python file, **zero dependencies**, for **Linux** and **Windows 10 / 11**.
 
 ![preview](preview.png)
 
@@ -26,7 +28,7 @@ cd waves
 ```
 Update later with `git pull && ./install.sh`. Remove with `./install.sh --uninstall`.
 
-### Windows — one command
+### Windows 10 / 11 — one command
 Needs Python 3 (`winget install Python.Python.3.12`). In PowerShell:
 ```powershell
 irm https://raw.githubusercontent.com/tfem1/waves/main/install.ps1 | iex
@@ -40,7 +42,7 @@ Uninstall:
 $env:WAVES_UNINSTALL=1; irm https://raw.githubusercontent.com/tfem1/waves/main/install.ps1 | iex
 ```
 
-### Windows — with git
+### Windows 10 / 11 — with git
 ```powershell
 git clone https://github.com/tfem1/waves.git
 cd waves
