@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Installs waves into ~/.local/bin (or $PREFIX/bin).
 #   ./install.sh                     install the waves command
-#   ./install.sh --kitty             + show waves when Kitty or tsunami opens
+#   ./install.sh --kitty             + show waves when Kitty opens
 #   ./install.sh --uninstall-kitty   remove the autostart
 set -e
 DEST="${PREFIX:-$HOME/.local}/bin"
@@ -39,11 +39,11 @@ echo "waves installed to $DEST/waves"
 case ":$PATH:" in *":$DEST:"*) ;; *) echo "note: add $DEST to your PATH";; esac
 
 if [ "$1" = "--kitty" ]; then
-    echo "autostart in Kitty and tsunami:"
-    SH_BLOCK="if { [ -n \"\$KITTY_WINDOW_ID\" ] || [ -n \"\$TSUNAMI\" ]; } && [[ \$- == *i* ]] && [ -x \"$DEST/waves\" ]; then
+    echo "autostart in Kitty:"
+    SH_BLOCK="if [ -n \"\$KITTY_WINDOW_ID\" ] && [[ \$- == *i* ]] && [ -x \"$DEST/waves\" ]; then
     \"$DEST/waves\"
 fi"
-    FISH_BLOCK="if status is-interactive; and begin; set -q KITTY_WINDOW_ID; or set -q TSUNAMI; end; and test -x \"$DEST/waves\"
+    FISH_BLOCK="if status is-interactive; and set -q KITTY_WINDOW_ID; and test -x \"$DEST/waves\"
     set -g fish_greeting  # waves replaces the fish greeting
     \"$DEST/waves\"
 end"
@@ -52,5 +52,5 @@ end"
     if [ -f "$HOME/.zshrc" ]  || [ "$(basename "${SHELL:-}")" = zsh ];  then add_block "$HOME/.zshrc"  "$SH_BLOCK"; found=1; fi
     if [ -f "$FISH_RC" ]      || [ "$(basename "${SHELL:-}")" = fish ]; then add_block "$FISH_RC" "$FISH_BLOCK"; found=1; fi
     [ "$found" = 1 ] || echo "  no shell found (bash/zsh/fish)"
-    echo "open a new Kitty or tsunami window to see waves 🌊"
+    echo "open a new Kitty window to see waves 🌊"
 fi

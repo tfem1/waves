@@ -18,7 +18,7 @@ __version__ = "0.1.0"
 
 # ───────────────────────────── themes ─────────────────────────────
 
-# Shared with the tsunami terminal: same names, same accents.
+# 40 themes in four categories: sea, gradient, mono, light.
 # ── themes:begin ──
 THEMES = {
     # sea — gradients drawn from the ocean
@@ -705,20 +705,6 @@ def config_path() -> str:
     return os.path.join(base, "waves", "config")
 
 
-def tsunami_theme() -> str:
-    """Inside the tsunami terminal, waves follows the window's theme (live)."""
-    if not os.environ.get("TSUNAMI"):
-        return ""
-    path = os.environ.get("TSUNAMI_CONFIG")
-    if path and not os.environ.get("TSUNAMI_THEME_PINNED"):
-        for line in read(path).splitlines():
-            k, _, v = line.split("#", 1)[0].partition("=")
-            if k.strip() == "theme" and v.strip() in THEMES:
-                return v.strip()
-    t = os.environ.get("TSUNAMI_THEME", "")
-    return t if t in THEMES else ""
-
-
 def load_theme() -> str:
     for line in read(config_path()).splitlines():
         k, _, v = line.partition("=")
@@ -864,7 +850,7 @@ def color_picker(data: dict, start: str) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(prog="waves", description="A minimal, good-looking system fetch.")
     ap.add_argument("-t", "--theme", choices=THEMES,
-                    default=os.environ.get("WAVES_THEME") or tsunami_theme() or load_theme() or "ocean")
+                    default=os.environ.get("WAVES_THEME") or load_theme() or "ocean")
     ap.add_argument("-c", "--color", action="store_true",
                     help="interactive theme picker (scroll through colors, enter to save)")
     ap.add_argument("--no-color", action="store_true", help="disable colors")

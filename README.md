@@ -11,7 +11,7 @@ OS / distro · kernel · uptime · shell · motherboard · CPU · GPU (up to 2) 
 ### Linux
 ```sh
 ./install.sh            # installs ~/.local/bin/waves
-./install.sh --kitty    # also show waves whenever Kitty or tsunami opens
+./install.sh --kitty    # also show waves whenever Kitty opens
 ```
 
 ### Windows
@@ -45,7 +45,7 @@ waves --json            # raw data
 | `Enter` | save as default (`~/.config/waves/config`) |
 | `q` / `Esc` | quit |
 
-Priority: `-t` > `WAVES_THEME` > tsunami theme > saved config > `ocean`.
+Priority: `-t` > `WAVES_THEME` > saved config > `ocean`.
 
 ### Themes (40)
 - **sea** — `tsunami` `ocean` `lagoon` `reef` `deepsea` `biolume` `seafoam` `kelp` `storm` `arctic` `tropic` `riptide` `maelstrom` `nautilus` `pearl` `sandbar`
@@ -55,22 +55,19 @@ Priority: `-t` > `WAVES_THEME` > tsunami theme > saved config > `ocean`.
 
 Respects `NO_COLOR`; `FORCE_COLOR=1` forces colors. Needs a truecolor terminal and a font with braille glyphs (JetBrains Mono, Nerd Fonts, DejaVu, Fira Code…). GPU names use `lspci` (`pciutils`) when available.
 
-## Autostart in Kitty and tsunami
+## Autostart in Kitty
 ```sh
 ./install.sh --kitty            # fish, bash and zsh are detected
 ./install.sh --uninstall-kitty  # remove it
 ```
-waves only shows up in interactive Kitty or tsunami windows (`$KITTY_WINDOW_ID` / `$TSUNAMI`): not in other terminals, over SSH, or in scripts. With fish, the greeting is turned off in those windows.
+waves only shows up in interactive Kitty windows (`$KITTY_WINDOW_ID`): not in other terminals, over SSH, or in scripts. With fish, the greeting is turned off in those windows.
 
 Block added to `~/.config/fish/config.fish`:
 ```fish
 # >>> waves (kitty) >>>
-if status is-interactive; and begin; set -q KITTY_WINDOW_ID; or set -q TSUNAMI; end; and test -x "$HOME/.local/bin/waves"
+if status is-interactive; and set -q KITTY_WINDOW_ID; and test -x "$HOME/.local/bin/waves"
     set -g fish_greeting
     "$HOME/.local/bin/waves"
 end
 # <<< waves (kitty) <<<
 ```
-
-## With the tsunami terminal
-waves shares its 40 themes with tsunami, a companion terminal, and follows the window's theme automatically, even when you change it live with `tsunami -c`.
