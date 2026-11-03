@@ -56,7 +56,7 @@ Use **Windows Terminal** with a font that has braille glyphs (Cascadia Mono, Jet
 waves                   # default theme
 waves -c                # interactive theme picker
 waves -t reef           # pick a theme
-waves -i moon           # pick a logo
+waves -i moon           # pick a logo (it becomes the default)
 waves -l                # list themes by category
 waves --themes sea      # preview a category (sea, gradient, mono, light) or all
 waves --no-logo
@@ -74,10 +74,10 @@ waves --json            # raw data
 | `Enter` | save theme and logo as default (`~/.config/waves/config`) |
 | `q` / `Esc` | quit |
 
-Priority: `-t` / `-i` > `WAVES_THEME` / `WAVES_ICON` > saved config > `ocean` / `wave`.
+Priority: `-t` > `WAVES_THEME` > saved config > `ocean`; for logos: `-i` (saved) > `WAVES_ICON` > saved config > `wave`.
 
 ### Logos (5)
-Pick the wave drawn next to your info with `-i`:
+Pick the wave drawn next to your info with `-i`. The logo you pick is saved and becomes the default, so plain `waves` keeps using it:
 ```sh
 waves -i great          # wave · moon · curl · swell · great
 waves --icons           # preview them all

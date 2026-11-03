@@ -926,8 +926,7 @@ def main() -> None:
                     help="interactive theme picker (scroll through colors, enter to save)")
     ap.add_argument("--no-color", action="store_true", help="disable colors")
     ap.add_argument("-i", "--icon", choices=list(LOGOS), metavar="LOGO",
-                    default=os.environ.get("WAVES_ICON") or load_icon() or "wave",
-                    help=f"wave logo: {', '.join(LOGOS)}")
+                    help=f"wave logo, saved as the default: {', '.join(LOGOS)}")
     ap.add_argument("--icons", action="store_true", help="preview every logo")
     ap.add_argument("--no-logo", action="store_true", help="hide the wave logo")
     ap.add_argument("--json", action="store_true", help="print raw data as JSON")
@@ -937,6 +936,16 @@ def main() -> None:
     ap.add_argument("-l", "--list-themes", action="store_true", help="list themes by category")
     ap.add_argument("-V", "--version", action="version", version=f"waves {__version__}")
     a = ap.parse_args()
+    icon_note = ""
+    if a.icon:  # an explicit -i becomes the new default
+        if a.icon != load_icon():
+            try:
+                save_config(icon=a.icon)
+                icon_note = a.icon
+            except OSError:
+                pass
+    else:
+        a.icon = os.environ.get("WAVES_ICON") if os.environ.get("WAVES_ICON") in LOGOS else (load_icon() or "wave")
     if a.theme not in THEMES:
         a.theme = "ocean"
 
@@ -978,7 +987,10 @@ def main() -> None:
             print(f"\n  {p.gradient(name, bold=True)}  {p.dim('waves -i ' + name)}")
             print(render(data, p, icon=name))
         return
-    print(render(data, Painter(a.theme, bool(color)), show_logo=not a.no_logo, icon=a.icon))
+    p = Painter(a.theme, bool(color))
+    print(render(data, p, show_logo=not a.no_logo, icon=a.icon))
+    if icon_note:
+        print(f"  {p.dim('default logo:')} {p.gradient(icon_note, bold=True)}\n")
     if os.environ.get("WAVES_DEBUG"):
         print(f"  {(time.perf_counter() - t0) * 1000:.1f} ms")
 
