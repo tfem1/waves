@@ -3,20 +3,20 @@
 Un *fetch* système minimaliste et joli, à la fastfetch. Un seul fichier Python, **zéro dépendance**.
 
 ```
-        .~~.                 user@host
-     .~'    '~.      .~'     ────────────────────────
-  ~~'          '~~~~'        os      Arch Linux x86_64
-                             kernel  Linux 6.18.2
-          .~~.               uptime  2h 14m
-       .~'    '~.      .~    shell   zsh
-    ~~'          '~~~~'      board   ASUS ROG STRIX B650-A
-                             cpu     AMD Ryzen 7 7800X3D (8c/16t) @ 5.05 GHz
-            .~~.             gpu1    NVIDIA GeForce RTX 4070
-         .~'    '~.     .    gpu2    AMD Raphael
-      ~~'          '~~~'     ram     9.2 GiB / 31.1 GiB  ━━━━────────── 30%
-                             disk1   2.0 TB NVMe · Samsung SSD 990 PRO (nvme0n1)
-         w a v e s           disk2   1.0 TB SSD · Crucial MX500 (sda)
+            ⢀⡠⡤⠤⢤⠤⣀                user@host
+         ⢀⡤⣺⣽⣾⣾⣔⣒⣷⡡⠱⢄              ────────────────────────
+        ⣠⣾⣾⢯⣞⣣⢟⣹⣿⣿⣷⢋⡔⢋⠂⡄           os      Arch Linux x86_64
+       ⣴⣟⡶⣏⡿⣔⢫⣾⣿⣿⣿⣿⣷⣷⡉⠜⠃           kernel  Linux 6.18.2
+      ⣰⡿⡞⡙⢾⢻⣌⣻⣿⣿⣿⠟⢉⢹⣷⡿⣹⠉⠓          board   ASUS ROG STRIX B650-A
+    ⢠⣤⠿⡽⢛⡧⡶⣦⣉⢹⣿⣽⣿⡄⠈⣟⡉⠚⠁⠙           cpu     AMD Ryzen 7 7800X3D (8c/16t)
+  ⠠⣴⡿⢷⠟⠍⠩⠞⢧⣭⡻⢦⡿⣿⣿⣷⣄⠈⠉              gpu     NVIDIA GeForce RTX 4070
+  ⠸⢟⣡⠢⢌⠂⢇⣭⢂⢹⡿⣧⣟⢶⢭⠿⣿⣷⣤⣀⡀   ⣀⣤⣤⣤⣠⡄   ram     9.2 GiB / 31.1 GiB    ━━━━────────── 30%
+  ⠈⢶⢭⣗⣮⢻⣭⢮⢯⣳⣳⣽⣻⣟⢿⢿⣴⣯⢿⣹⣟⢿⡻⣟⠿⣭⣯⡟⠞    disk1   2.0 TB NVMe · Samsung SSD 990 PRO
+    ⠉⠙⠛⠛⠚⠛⠛⠓⠛⠓⠛⠛⠛⠛⠛⠓⠛⠛⠛⠛⠋⠉⠉⠉       disk2   1.0 TB SSD · Crucial MX500
+            w a v e s
 ```
+
+![aperçu](preview.png)
 
 ## Infos affichées
 OS / distro · kernel · uptime · shell · carte mère · CPU · GPU (jusqu'à 2) · RAM (avec barre) · disques (jusqu'à 2) · usage de `/`

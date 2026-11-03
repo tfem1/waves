@@ -41,17 +41,16 @@ MONO_THEMES = ["mono", "snow", "graphite", "ice", "abyss", "matrix",
                "ruby", "rose", "lavender", "amber", "teal"]
 
 LOGO = [
-    "      .~~.              ",
-    "   .~'    '~.      .~'  ",
-    "~~'          '~~~~'     ",
-    "                        ",
-    "        .~~.            ",
-    "     .~'    '~.      .~ ",
-    "  ~~'          '~~~~'   ",
-    "                        ",
-    "          .~~.          ",
-    "       .~'    '~.     . ",
-    "    ~~'          '~~~'  ",
+    "          ⢀⡠⡤⠤⢤⠤⣀             ",
+    "       ⢀⡤⣺⣽⣾⣾⣔⣒⣷⡡⠱⢄           ",
+    "      ⣠⣾⣾⢯⣞⣣⢟⣹⣿⣿⣷⢋⡔⢋⠂⡄        ",
+    "     ⣴⣟⡶⣏⡿⣔⢫⣾⣿⣿⣿⣿⣷⣷⡉⠜⠃        ",
+    "    ⣰⡿⡞⡙⢾⢻⣌⣻⣿⣿⣿⠟⢉⢹⣷⡿⣹⠉⠓       ",
+    "  ⢠⣤⠿⡽⢛⡧⡶⣦⣉⢹⣿⣽⣿⡄⠈⣟⡉⠚⠁⠙        ",
+    "⠠⣴⡿⢷⠟⠍⠩⠞⢧⣭⡻⢦⡿⣿⣿⣷⣄⠈⠉           ",
+    "⠸⢟⣡⠢⢌⠂⢇⣭⢂⢹⡿⣧⣟⢶⢭⠿⣿⣷⣤⣀⡀   ⣀⣤⣤⣤⣠⡄",
+    "⠈⢶⢭⣗⣮⢻⣭⢮⢯⣳⣳⣽⣻⣟⢿⢿⣴⣯⢿⣹⣟⢿⡻⣟⠿⣭⣯⡟⠞ ",
+    "  ⠉⠙⠛⠛⠚⠛⠛⠓⠛⠓⠛⠛⠛⠛⠛⠓⠛⠛⠛⠛⠋⠉⠉⠉    ",
 ]
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
@@ -317,6 +316,21 @@ def bar(p: Painter, ratio: float, width=14) -> str:
     return out + RESET + p.dim("─" * (width - filled))
 
 
+def paint_logo_line(p: Painter, line: str, row: int, rows: int) -> str:
+    """Diagonal gradient: light crest at the top-left, deep water at the bottom-right."""
+    if not p.on:
+        return line
+    w = max(len(line) - 1, 1)
+    out = []
+    for col, ch in enumerate(line):
+        if ch == " ":
+            out.append(ch)
+            continue
+        t = 0.65 * row / max(rows - 1, 1) + 0.35 * col / w
+        out.append(p.fg(p.lerp(t)) + ch)
+    return "".join(out) + RESET
+
+
 def render(data: dict, p: Painter, show_logo=True) -> str:
     lab_w = 7
     rows: list[str] = []
@@ -363,8 +377,7 @@ def render(data: dict, p: Painter, show_logo=True) -> str:
         return "\n".join(rows)
 
     logo_w = max(len(l) for l in LOGO)
-    logo = [p.gradient(l.ljust(logo_w), t0=i / len(LOGO) * 0.4, t1=0.6 + i / len(LOGO) * 0.4)
-            for i, l in enumerate(LOGO)]
+    logo = [paint_logo_line(p, l.ljust(logo_w), i, len(LOGO)) for i, l in enumerate(LOGO)]
     logo.append(" " * logo_w)
     logo.append(" " * ((logo_w - 9) // 2) + p.gradient("w a v e s", bold=True) + " " * ((logo_w - 9) // 2 + 1))
 
@@ -537,7 +550,8 @@ def main() -> None:
     if a.color:
         color_picker(data, a.theme)
         return
-    color = not a.no_color and "NO_COLOR" not in os.environ and sys.stdout.isatty() or os.environ.get("FORCE_COLOR")
+    color = not a.no_color and (bool(os.environ.get("FORCE_COLOR"))
+                                or ("NO_COLOR" not in os.environ and sys.stdout.isatty()))
     if a.list_themes:
         p = Painter("ocean", bool(color))
         for name, stops in THEMES.items():
