@@ -29,6 +29,7 @@ OS / distro · kernel · uptime · shell · carte mère · CPU · GPU (jusqu'à 
 ## Utilisation
 ```sh
 waves                 # thème ocean par défaut
+waves -c              # sélecteur de couleurs interactif
 waves -t sunset       # choisir un thème
 waves -l              # lister les thèmes avec leur palette
 waves --themes        # aperçu de tous les thèmes
@@ -37,11 +38,24 @@ waves --no-logo       # infos seules
 waves --no-color
 waves --json          # sortie brute en JSON
 ```
+### Sélecteur de couleurs (`waves -c`)
+Écran interactif avec aperçu en direct :
+
+| Touche | Action |
+|---|---|
+| `←` `→` (ou `h` `l`, `↑` `↓`) | faire défiler les thèmes |
+| `Tab` / `Shift+Tab` | changer d'onglet : tous · dégradés · mono |
+| `Entrée` | sauvegarder comme thème par défaut |
+| `q` / `Échap` | quitter |
+
+Le thème est enregistré dans `~/.config/waves/config` (marqué d'une `*` dans le sélecteur).
+Priorité : `-t` > `WAVES_THEME` > config > `ocean`.
+
 ### Thèmes
 - **Dégradés** : `ocean` · `sunset` · `mint` · `aurora`
 - **Monochromes** (une seule teinte, du clair au foncé) : `mono` · `snow` · `graphite` · `ice` · `abyss` · `matrix` · `ruby` · `rose` · `lavender` · `amber` · `teal`
 
-Thème par défaut via variable d'env : `export WAVES_THEME=aurora`.
+Thème par défaut aussi possible via variable d'env : `export WAVES_THEME=aurora`.
 Respecte `NO_COLOR`. `FORCE_COLOR=1` force les couleurs (pipe, etc.).
 
 > Nécessite un terminal *truecolor* (Kitty, Alacritty, WezTerm, GNOME Terminal, Konsole…).

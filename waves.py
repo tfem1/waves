@@ -377,9 +377,147 @@ def render(data: dict, p: Painter, show_logo=True) -> str:
     return "\n" + "\n".join(out) + "\n"
 
 
+# ───────────────────────────── config ─────────────────────────────
+
+def config_path() -> str:
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    return os.path.join(base, "waves", "config")
+
+
+def load_theme() -> str:
+    for line in read(config_path()).splitlines():
+        k, _, v = line.partition("=")
+        if k.strip() == "theme" and v.strip() in THEMES:
+            return v.strip()
+    return ""
+
+
+def save_theme(name: str) -> None:
+    path = config_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(f"theme={name}\n")
+
+
+# ───────────────────────────── color picker (waves -c) ─────────────────────────────
+
+TABS = [("tous", list(THEMES)),
+        ("dégradés", [t for t in THEMES if t not in MONO_THEMES]),
+        ("mono", MONO_THEMES)]
+
+
+def read_key(fd: int) -> str:
+    b = os.read(fd, 8)
+    keys = {b"\x1b[C": "right", b"\x1b[D": "left", b"\x1b[A": "up", b"\x1b[B": "down",
+            b"\x1bOC": "right", b"\x1bOD": "left", b"\x1bOA": "up", b"\x1bOB": "down",
+            b"\t": "tab", b"\x1b[Z": "btab", b"\r": "enter", b"\n": "enter",
+            b"\x1b": "quit", b"q": "quit", b"\x03": "quit",
+            b"l": "right", b"h": "left", b"k": "up", b"j": "down"}
+    return keys.get(b, "")
+
+
+def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str) -> str:
+    themes = TABS[tab][1]
+    name = themes[idx]
+    p = Painter(name, True)
+    cols = shutil.get_terminal_size((100, 30)).columns
+
+    # onglets
+    tabs = []
+    for i, (label, _) in enumerate(TABS):
+        tabs.append(p.at(0.2, f" {label} ", bold=True) if i == tab else p.dim(f" {label} "))
+    head = f"  {p.gradient('waves', bold=True)} {p.dim('·')} {p.dim('couleurs')}     " + p.dim("│").join(tabs)
+
+    # bande des thèmes, défilante autour de la sélection
+    chips = []
+    for i, t in enumerate(themes):
+        tp = Painter(t, True)
+        dot = tp.at(0.0, "●") + tp.at(0.5, "●") + tp.at(1.0, "●")
+        star = "*" if t == saved else ""
+        label = tp.gradient(f"{t}{star}", bold=True) if i == idx else p.dim(f"{t}{star}")
+        chips.append((f"{dot} {label}", i == idx))
+    budget = cols - 8
+    lo = hi = idx
+    width = vlen(chips[idx][0])
+    while True:
+        grew = False
+        if hi + 1 < len(chips) and width + vlen(chips[hi + 1][0]) + 4 <= budget:
+            hi += 1; width += vlen(chips[hi][0]) + 4; grew = True
+        if lo - 1 >= 0 and width + vlen(chips[lo - 1][0]) + 4 <= budget:
+            lo -= 1; width += vlen(chips[lo][0]) + 4; grew = True
+        if not grew:
+            break
+    strip = "    ".join(c for c, _ in chips[lo:hi + 1])
+    left = p.dim("‹ ") if lo > 0 else "  "
+    right = p.dim(" ›") if hi < len(chips) - 1 else ""
+    pos = p.dim(f"{idx + 1}/{len(themes)}")
+
+    body = render(data, p)
+    keys = p.dim("←/→ thème   tab onglet   entrée sauvegarder   q quitter")
+    note = ("  " + p.at(0.0, msg, bold=True)) if msg else ""
+    return "\n".join([
+        "", head, "",
+        f"  {left}{strip}{right}   {pos}",
+        body,
+        f"  {keys}{note}",
+    ])
+
+
+def color_picker(data: dict, start: str) -> None:
+    if not (sys.stdin.isatty() and sys.stdout.isatty()):
+        sys.exit("waves -c : nécessite un terminal interactif")
+    import termios
+    import tty
+
+    saved = load_theme()
+    tab = 0
+    idx = TABS[0][1].index(start) if start in TABS[0][1] else 0
+    msg = ""
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    out = sys.stdout
+    out.write("\x1b[?1049h\x1b[?25l")  # écran alternatif + curseur caché
+    try:
+        tty.setraw(fd)
+        while True:
+            frame = picker_frame(data, tab, idx, saved, msg)
+            out.write("\x1b[H\x1b[2J" + frame.replace("\n", "\r\n"))
+            out.flush()
+            msg = ""
+            k = read_key(fd)
+            themes = TABS[tab][1]
+            if k in ("right", "down"):
+                idx = (idx + 1) % len(themes)
+            elif k in ("left", "up"):
+                idx = (idx - 1) % len(themes)
+            elif k in ("tab", "btab"):
+                current = themes[idx]
+                tab = (tab + (1 if k == "tab" else -1)) % len(TABS)
+                new = TABS[tab][1]
+                idx = new.index(current) if current in new else 0
+            elif k == "enter":
+                saved = themes[idx]
+                try:
+                    save_theme(saved)
+                    msg = f"✓ {saved} sauvegardé"
+                except OSError as e:
+                    msg = f"erreur : {e}"
+            elif k == "quit":
+                break
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        out.write("\x1b[?25h\x1b[?1049l")
+        out.flush()
+    if saved:
+        print(f"  thème par défaut : {Painter(saved, True).gradient(saved, bold=True)}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="waves", description="A minimal, good-looking system fetch.")
-    ap.add_argument("-t", "--theme", choices=THEMES, default=os.environ.get("WAVES_THEME", "ocean"))
+    ap.add_argument("-t", "--theme", choices=THEMES,
+                    default=os.environ.get("WAVES_THEME") or load_theme() or "ocean")
+    ap.add_argument("-c", "--color", action="store_true",
+                    help="interactive theme picker (scroll through colors, enter to save)")
     ap.add_argument("--no-color", action="store_true", help="disable colors")
     ap.add_argument("--no-logo", action="store_true", help="hide the wave logo")
     ap.add_argument("--json", action="store_true", help="print raw data as JSON")
@@ -395,6 +533,9 @@ def main() -> None:
     data = collect()
     if a.json:
         print(json.dumps(data, indent=2))
+        return
+    if a.color:
+        color_picker(data, a.theme)
         return
     color = not a.no_color and "NO_COLOR" not in os.environ and sys.stdout.isatty() or os.environ.get("FORCE_COLOR")
     if a.list_themes:
