@@ -108,6 +108,8 @@ jobs:
 
       - name: waves --update replaces the installed copy
         run: |
+          # like a new terminal: take the PATH that the installer saved for the user
+          $env:Path = [Environment]::GetEnvironmentVariable("Path", "User") + ";" + $env:Path
           $dir = Join-Path $env:LOCALAPPDATA "Programs\waves"
           $newer = Join-Path $env:RUNNER_TEMP "waves-newer.py"
           (Get-Content "$dir\waves.py" -Raw) -replace '__version__ = "[^"]+"', '__version__ = "9.9.9"' | Set-Content -Encoding UTF8 $newer
