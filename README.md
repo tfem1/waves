@@ -1,6 +1,6 @@
 # 🌊 waves
 
-A minimal, good-looking system fetch, in the spirit of fastfetch. One Python file, **zero dependencies**.
+A minimal, good-looking system fetch, in the spirit of fastfetch. One Python file, **zero dependencies**, for **Linux and Windows**.
 
 ![preview](preview.png)
 
@@ -8,10 +8,21 @@ A minimal, good-looking system fetch, in the spirit of fastfetch. One Python fil
 OS / distro · kernel · uptime · shell · motherboard · CPU · GPU (up to 2) · RAM (with a bar) · disks (up to 2) · `/` usage
 
 ## Install
+### Linux
 ```sh
 ./install.sh            # installs ~/.local/bin/waves
 ./install.sh --kitty    # also show waves whenever Kitty or tsunami opens
 ```
+
+### Windows
+Needs Python 3 (`winget install Python.Python.3.12`). In PowerShell, from the waves folder:
+```powershell
+powershell -ExecutionPolicy Bypass -File install.ps1            # adds the waves command
+powershell -ExecutionPolicy Bypass -File install.ps1 -Startup   # also show waves when PowerShell opens
+powershell -ExecutionPolicy Bypass -File install.ps1 -Uninstall
+```
+On Windows, waves reads the registry and the Windows API (and `Get-PhysicalDisk` for NVMe / SSD / HDD), detects PowerShell 7, Windows PowerShell, cmd or nushell, and stores its config in `%APPDATA%\waves`.
+Use **Windows Terminal** with a font that has braille glyphs (Cascadia Mono, JetBrains Mono) for the logo.
 
 ## Usage
 ```sh

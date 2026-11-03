@@ -328,7 +328,270 @@ def get_board() -> str:
     return f"{vendor} {name}".strip()
 
 
+# ───────────────────────────── windows probes ─────────────────────────────
+
+IS_WIN = sys.platform == "win32"
+WIN_CV = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+ARCH = {"amd64": "x86_64", "x86": "x86", "arm64": "aarch64"}
+
+
+def reg(path: str, name: str):
+    import winreg
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path) as k:
+            return winreg.QueryValueEx(k, name)[0]
+    except OSError:
+        return None
+
+
+def reg_subkeys(path: str) -> list[str]:
+    import winreg
+    out = []
+    try:
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path) as k:
+            i = 0
+            while True:
+                try:
+                    out.append(winreg.EnumKey(k, i))
+                except OSError:
+                    break
+                i += 1
+    except OSError:
+        pass
+    return out
+
+
+def win_run(cmd: list[str], timeout=6) -> str:
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+                              creationflags=0x08000000).stdout.strip()  # CREATE_NO_WINDOW
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def win_os() -> str:
+    name = reg(WIN_CV, "ProductName") or "Windows"
+    try:
+        build = int(reg(WIN_CV, "CurrentBuildNumber") or 0)
+    except ValueError:
+        build = 0
+    if build >= 22000:  # Windows 11 still reports "Windows 10" in the registry
+        name = name.replace("Windows 10", "Windows 11")
+    version = reg(WIN_CV, "DisplayVersion") or reg(WIN_CV, "ReleaseId") or ""
+    arch = ARCH.get(platform.machine().lower(), platform.machine())
+    return " ".join(x for x in (name, version, arch) if x)
+
+
+def win_kernel() -> str:
+    major = reg(WIN_CV, "CurrentMajorVersionNumber")
+    minor = reg(WIN_CV, "CurrentMinorVersionNumber")
+    build = reg(WIN_CV, "CurrentBuildNumber")
+    ubr = reg(WIN_CV, "UBR")
+    if major is None or build is None:
+        return f"Windows NT {platform.version()}"
+    return f"Windows NT {major}.{minor}.{build}" + (f".{ubr}" if ubr is not None else "")
+
+
+def win_uptime_seconds() -> int:
+    import ctypes
+    f = ctypes.windll.kernel32.GetTickCount64
+    f.restype = ctypes.c_ulonglong
+    return int(f() // 1000)
+
+
+def win_memory():
+    import ctypes
+
+    class MEMORYSTATUSEX(ctypes.Structure):
+        _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                    ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                    ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                    ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                    ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+
+    st = MEMORYSTATUSEX()
+    st.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(st)):
+        return 0, 0
+    return st.ullTotalPhys - st.ullAvailPhys, st.ullTotalPhys
+
+
+def win_cpu() -> str:
+    key = r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"
+    model = reg(key, "ProcessorNameString") or platform.processor() or "Unknown CPU"
+    threads = os.cpu_count() or 0
+    mhz = reg(key, "~MHz")
+    freq = f" @ {mhz / 1000:.2f} GHz" if isinstance(mhz, int) and mhz > 0 else ""
+    return f"{clean(model)} ({threads}t){freq}"
+
+
+def win_gpus(limit=2) -> list[str]:
+    cls = r"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}"
+    gpus = []
+    for sub in reg_subkeys(cls):
+        if not sub.isdigit():
+            continue
+        name = reg(f"{cls}\\{sub}", "DriverDesc")
+        if not name or re.search(r"Basic (Display|Render)|Remote|Mirror|Virtual Display|Parsec", name, re.I):
+            continue
+        name = re.sub(r"\((R|TM)\)", "", name).replace("Advanced Micro Devices, Inc.", "AMD").strip()
+        if name not in gpus:
+            gpus.append(name)
+    return gpus[:limit]
+
+
+def win_board() -> str:
+    b = r"HARDWARE\DESCRIPTION\System\BIOS"
+    vendor = reg(b, "BaseBoardManufacturer") or ""
+    name = reg(b, "BaseBoardProduct") or ""
+    if not name or JUNK.search(name):
+        vendor, name = reg(b, "SystemManufacturer") or vendor, reg(b, "SystemProductName") or ""
+    vendor = "" if JUNK.search(vendor) else vendor
+    name = "" if JUNK.search(name) else name
+    vendor = re.sub(r"\b(Co\.,? ?Ltd\.?|Inc\.?|Corporation|COMPUTER INC\.?)\b", "", vendor, flags=re.I).strip(" ,.")
+    return f"{vendor} {name}".strip()
+
+
+def win_processes() -> dict:
+    """pid -> (parent pid, exe name), from a Toolhelp snapshot."""
+    import ctypes
+    from ctypes import wintypes
+
+    class PROCESSENTRY32W(ctypes.Structure):
+        _fields_ = [("dwSize", wintypes.DWORD), ("cntUsage", wintypes.DWORD),
+                    ("th32ProcessID", wintypes.DWORD), ("th32DefaultHeapID", ctypes.c_size_t),
+                    ("th32ModuleID", wintypes.DWORD), ("cntThreads", wintypes.DWORD),
+                    ("th32ParentProcessID", wintypes.DWORD), ("pcPriClassBase", ctypes.c_long),
+                    ("dwFlags", wintypes.DWORD), ("szExeFile", ctypes.c_wchar * 260)]
+
+    k32 = ctypes.windll.kernel32
+    k32.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    snap = k32.CreateToolhelp32Snapshot(0x2, 0)  # TH32CS_SNAPPROCESS
+    procs = {}
+    if not snap or snap == wintypes.HANDLE(-1).value:
+        return procs
+    e = PROCESSENTRY32W()
+    e.dwSize = ctypes.sizeof(PROCESSENTRY32W)
+    ok = k32.Process32FirstW(snap, ctypes.byref(e))
+    while ok:
+        procs[e.th32ProcessID] = (e.th32ParentProcessID, e.szExeFile.lower())
+        ok = k32.Process32NextW(snap, ctypes.byref(e))
+    k32.CloseHandle(snap)
+    return procs
+
+
+WIN_SHELLS = {"pwsh.exe": "PowerShell 7", "powershell.exe": "Windows PowerShell", "cmd.exe": "cmd",
+              "nu.exe": "nushell", "bash.exe": "bash", "zsh.exe": "zsh", "fish.exe": "fish",
+              "elvish.exe": "elvish", "xonsh.exe": "xonsh"}
+
+
+def win_shell() -> str:
+    try:
+        procs = win_processes()
+    except Exception:
+        return ""
+    chain, pid = [], os.getpid()
+    for _ in range(8):
+        if pid not in procs:
+            break
+        pid, exe = procs[pid][0], procs.get(procs[pid][0], (0, ""))[1]
+        chain.append(exe)
+    chain = [e for e in chain if e and not re.match(r"(python\w*|py|pythonw?|waves)\.exe$", e)]
+    # waves.cmd is run by a cmd.exe shim: skip it when another shell sits above it
+    if len(chain) > 1 and chain[0] == "cmd.exe" and chain[1] in WIN_SHELLS:
+        chain = chain[1:]
+    shell = WIN_SHELLS.get(chain[0], chain[0].removesuffix(".exe")) if chain else ""
+    if os.environ.get("WT_SESSION"):
+        shell += " · Windows Terminal"
+    return shell
+
+
+def win_disks(limit=2) -> list[dict]:
+    ps = ("Get-PhysicalDisk | Select-Object FriendlyName,Size,MediaType,BusType,DeviceId "
+          "| ConvertTo-Json -Compress")
+    out = win_run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps])
+    disks = []
+    try:
+        items = json.loads(out) if out else []
+    except ValueError:
+        items = []
+    if isinstance(items, dict):
+        items = [items]
+    media = {"3": "HDD", "4": "SSD", "5": "SCM", "hdd": "HDD", "ssd": "SSD", "scm": "SCM"}
+    for d in items:
+        bus = str(d.get("BusType", "")).lower()
+        kind = "NVMe" if bus in ("17", "nvme") else media.get(str(d.get("MediaType", "")).lower(), "Disk")
+        if bus in ("7", "usb"):
+            kind += " · USB"
+        size = int(d.get("Size") or 0)
+        if size > 0:
+            disks.append({"name": f"disk {d.get('DeviceId', len(disks))}",
+                          "model": (d.get("FriendlyName") or "").strip(), "size": size, "type": kind})
+    if not disks:  # fallback: fixed drives
+        import ctypes
+        import string
+        mask = ctypes.windll.kernel32.GetLogicalDrives()
+        for i, letter in enumerate(string.ascii_uppercase):
+            root = f"{letter}:\\"
+            if mask >> i & 1 and ctypes.windll.kernel32.GetDriveTypeW(root) == 3:  # DRIVE_FIXED
+                try:
+                    disks.append({"name": f"{letter}:", "model": "", "size": shutil.disk_usage(root).total,
+                                  "type": "Drive"})
+                except OSError:
+                    pass
+    disks.sort(key=lambda d: d["size"], reverse=True)
+    return disks[:limit]
+
+
+def win_console() -> bool:
+    """Turn on ANSI colors and UTF-8 in the Windows console. Returns True if colors work."""
+    import ctypes
+    k32 = ctypes.windll.kernel32
+    k32.SetConsoleOutputCP(65001)
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+    handle = k32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+    mode = ctypes.c_ulong()
+    if not k32.GetConsoleMode(handle, ctypes.byref(mode)):
+        return False
+    return bool(k32.SetConsoleMode(handle, mode.value | 0x0004))  # ENABLE_VIRTUAL_TERMINAL_PROCESSING
+
+
+# ───────────────────────────── collect ─────────────────────────────
+
+def format_uptime(s: int) -> str:
+    d, s = divmod(s, 86400)
+    h, s = divmod(s, 3600)
+    m = s // 60
+    return " ".join([f"{d}d"] * bool(d) + [f"{h}h"] * bool(h) + [f"{m}m"])
+
+
 def collect() -> dict:
+    if IS_WIN:
+        drive = os.environ.get("SystemDrive", "C:")
+        try:
+            u = shutil.disk_usage(drive + "\\")
+            root = {"used": u.used, "total": u.total, "label": drive}
+        except OSError:
+            root = {"used": 0, "total": 0, "label": drive}
+        used, total = win_memory()
+        return {
+            "user": getpass.getuser(),
+            "host": socket.gethostname(),
+            "os": win_os(),
+            "kernel": win_kernel(),
+            "uptime": format_uptime(win_uptime_seconds()),
+            "shell": win_shell(),
+            "board": win_board(),
+            "cpu": win_cpu(),
+            "gpus": win_gpus(),
+            "memory": {"used": used, "total": total},
+            "disks": win_disks(),
+            "root": root,
+        }
     used, total = get_memory()
     rused, rtotal = get_root_usage()
     return {
@@ -343,7 +606,7 @@ def collect() -> dict:
         "gpus": get_gpus(),
         "memory": {"used": used, "total": total},
         "disks": get_disks(),
-        "root": {"used": rused, "total": rtotal},
+        "root": {"used": rused, "total": rtotal, "label": "root"},
     }
 
 
@@ -405,7 +668,7 @@ def render(data: dict, p: Painter, show_logo=True) -> str:
     rt = data["root"]
     if rt["total"]:
         r = rt["used"] / rt["total"]
-        entries.append(("root", f"{human(rt['used']) + ' / ' + human(rt['total']):<21} "
+        entries.append((rt.get("label", "root"), f"{human(rt['used']) + ' / ' + human(rt['total']):<21} "
                                 f"{bar(p, r)} {p.dim(f'{r * 100:.0f}%')}"))
 
     n = len(entries)
@@ -435,7 +698,10 @@ def render(data: dict, p: Painter, show_logo=True) -> str:
 # ───────────────────────────── config ─────────────────────────────
 
 def config_path() -> str:
-    base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    if IS_WIN:
+        base = os.environ.get("APPDATA") or os.path.expanduser("~")
+    else:
+        base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
     return os.path.join(base, "waves", "config")
 
 
@@ -473,7 +739,17 @@ def save_theme(name: str) -> None:
 TABS = [("all", list(THEMES))] + [(tg, [n for n in THEMES if tg in tags_of(n)]) for tg in TAGS]
 
 
+WIN_KEYS = {"H": "up", "P": "down", "K": "left", "M": "right", "\x0f": "btab"}
+
+
 def read_key(fd: int) -> str:
+    if IS_WIN:
+        import msvcrt
+        ch = msvcrt.getwch()
+        if ch in ("\x00", "\xe0"):  # arrows and special keys come as two characters
+            return WIN_KEYS.get(msvcrt.getwch(), "")
+        return {"\t": "tab", "\r": "enter", "\x1b": "quit", "q": "quit", "\x03": "quit", "r": "r",
+                "l": "right", "h": "left", "k": "up", "j": "down"}.get(ch, "")
     b = os.read(fd, 8)
     keys = {b"\x1b[C": "right", b"\x1b[D": "left", b"\x1b[A": "up", b"\x1b[B": "down",
             b"\x1bOC": "right", b"\x1bOD": "left", b"\x1bOA": "up", b"\x1bOB": "down",
@@ -533,19 +809,21 @@ def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str) -> str:
 def color_picker(data: dict, start: str) -> None:
     if not (sys.stdin.isatty() and sys.stdout.isatty()):
         sys.exit("waves -c: needs an interactive terminal")
-    import termios
-    import tty
+    if not IS_WIN:
+        import termios
+        import tty
 
     saved = load_theme()
     tab = 0
     idx = TABS[0][1].index(start) if start in TABS[0][1] else 0
     msg = ""
     fd = sys.stdin.fileno()
-    old = termios.tcgetattr(fd)
+    old = None if IS_WIN else termios.tcgetattr(fd)
     out = sys.stdout
     out.write("\x1b[?1049h\x1b[?25l")  # alternate screen, hidden cursor
     try:
-        tty.setraw(fd)
+        if not IS_WIN:
+            tty.setraw(fd)
         while True:
             frame = picker_frame(data, tab, idx, saved, msg)
             out.write("\x1b[H\x1b[2J" + frame.replace("\n", "\r\n"))
@@ -575,7 +853,8 @@ def color_picker(data: dict, start: str) -> None:
             elif k == "quit":
                 break
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+        if old is not None:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
         out.write("\x1b[?25h\x1b[?1049l")
         out.flush()
     if saved:
@@ -600,6 +879,7 @@ def main() -> None:
     if a.theme not in THEMES:
         a.theme = "ocean"
 
+    vt_ok = win_console() if IS_WIN else True
     t0 = time.perf_counter()
     data = collect()
     if a.json:
@@ -609,7 +889,7 @@ def main() -> None:
         color_picker(data, a.theme)
         return
     color = not a.no_color and (bool(os.environ.get("FORCE_COLOR"))
-                                or ("NO_COLOR" not in os.environ and sys.stdout.isatty()))
+                                or ("NO_COLOR" not in os.environ and sys.stdout.isatty() and vt_ok))
     if a.list_themes:
         p = Painter("ocean", bool(color))
         for tg in TAGS[:3]:
