@@ -62,4 +62,4 @@ end
 ```
 
 ## With the tsunami terminal
-waves shares its 40 themes with [tsunami](../tsunami) and follows the window's theme automatically, even when you change it live with `tsunami -c`.
+waves shares its 40 themes with tsunami, a companion terminal, and follows the window's theme automatically, even when you change it live with `tsunami -c`.
