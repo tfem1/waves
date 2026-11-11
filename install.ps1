@@ -49,9 +49,9 @@ function Install-Waves([bool]$Startup, [bool]$Uninstall, [string]$Here) {
         $parts = $cand -split " "
         $exe = $parts[0]
         if (-not (Get-Command $exe -ErrorAction SilentlyContinue)) { continue }
-        $pyArgs = @($parts | Select-Object -Skip 1) + @("-c", "import sys; print(sys.version_info[0])")
-        try { $v = & $exe @pyArgs 2>$null } catch { $v = $null }
-        if ("$v".Trim() -eq "3") { $Python = $cand; break }
+        $pyArgs = @($parts | Select-Object -Skip 1) + @("-c", "import sys; print(sys.version_info[0], sys.executable)")
+        try { $v = "$(& $exe @pyArgs 2>$null)".Trim() } catch { $v = "" }
+        if ($v -match "^3 (.+)$") { $Python = $cand; $PythonExe = $Matches[1]; break }
     }
     if (-not $Python) {
         Write-Host "Python 3 was not found. Install it, then run this again:" -ForegroundColor Yellow
@@ -69,7 +69,9 @@ function Install-Waves([bool]$Startup, [bool]$Uninstall, [string]$Here) {
         [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $Url -OutFile $target -UseBasicParsing
     }
-    Set-Content -Path (Join-Path $Dest "waves.cmd") -Value "@$Python `"%~dp0waves.py`" %*" -Encoding ASCII
+    # call python.exe directly (the py launcher costs ~50 ms); fall back to the launcher if it moves
+    $shim = "@if exist `"$PythonExe`" (`"$PythonExe`" `"%~dp0waves.py`" %*) else ($Python `"%~dp0waves.py`" %*)"
+    Set-Content -Path (Join-Path $Dest "waves.cmd") -Value $shim -Encoding ASCII
     Write-Host "waves installed to $Dest (using: $Python)"
 
     if (("$userPath" -split ";") -notcontains $Dest) {

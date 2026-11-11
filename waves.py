@@ -2,7 +2,6 @@
 """waves — a minimal, good-looking system fetch."""
 from __future__ import annotations
 
-import argparse
 import getpass
 import json
 import os
@@ -560,7 +559,41 @@ def win_shell() -> str:
     return shell
 
 
+def disks_cache_path() -> str:
+    return os.path.join(os.path.dirname(state_path()), "disks.json")
+
+
+def refresh_disks_cache() -> list[dict]:
+    disks = win_disks_query()
+    path = disks_cache_path()
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(disks, f)
+        os.replace(path + ".tmp", path)
+    except OSError:
+        pass
+    return disks
+
+
 def win_disks(limit=2) -> list[dict]:
+    # shortcut: Get-PhysicalDisk needs a ~1 s PowerShell spawn, so show the cached list and refresh it
+    # in a detached process; a plugged/unplugged disk shows up on the next run
+    try:
+        with open(disks_cache_path(), encoding="utf-8") as f:
+            disks = json.load(f)
+    except (OSError, ValueError):
+        return refresh_disks_cache()[:limit]
+    try:
+        subprocess.Popen([sys.executable, script_path(), "--_disks"], stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         creationflags=0x00000008 | 0x08000000)  # DETACHED_PROCESS | CREATE_NO_WINDOW
+    except OSError:
+        pass
+    return disks[:limit]
+
+
+def win_disks_query() -> list[dict]:
     ps = ("Get-PhysicalDisk | Select-Object FriendlyName,Size,MediaType,BusType,DeviceId "
           "| ConvertTo-Json -Compress")
     out = win_run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps])
@@ -594,7 +627,7 @@ def win_disks(limit=2) -> list[dict]:
                 except OSError:
                     pass
     disks.sort(key=lambda d: d["size"], reverse=True)
-    return disks[:limit]
+    return disks
 
 
 def win_console() -> bool:
@@ -1106,7 +1139,8 @@ def color_picker(data: dict, start: str, icon: str = "wave") -> None:
         print(f"  default theme: {Painter(saved, True).gradient(saved, bold=True)}")
 
 
-def main() -> None:
+def parse_args():
+    import argparse
     ap = argparse.ArgumentParser(prog="waves", description="A minimal, good-looking system fetch.")
     ap.add_argument("-t", "--theme", choices=THEMES,
                     default=os.environ.get("WAVES_THEME") or load_theme() or "ocean")
@@ -1127,7 +1161,21 @@ def main() -> None:
                     help="check for updates once a day and ask before installing (default: on)")
     ap.add_argument("--_update-check", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("-V", "--version", action="version", version=f"waves {__version__}")
-    a = ap.parse_args()
+    return ap.parse_args()
+
+
+def main() -> None:
+    if IS_WIN and sys.argv[1:] == ["--_disks"]:  # detached background refresh
+        refresh_disks_cache()
+        return
+    if len(sys.argv) > 1:
+        a = parse_args()
+    else:  # plain `waves`: skip importing argparse (~30 ms)
+        from types import SimpleNamespace
+        a = SimpleNamespace(theme=os.environ.get("WAVES_THEME") or load_theme() or "ocean", color=False,
+                            no_color=False, icon=None, icons=False, no_logo=False, json=False, themes=None,
+                            mono_themes=False, list_themes=False, update=False, update_check=None,
+                            _update_check=False)
     if a._update_check:  # detached background process
         check_for_update()
         return
