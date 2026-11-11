@@ -2,18 +2,14 @@
 """waves — a minimal, good-looking system fetch."""
 from __future__ import annotations
 
-import getpass
-import json
 import os
-import platform
 import re
-import shutil
-import socket
-import subprocess
 import sys
 import time
+# getpass, json, platform, shutil, socket and subprocess cost ~15 ms to import:
+# they are imported only in the code paths that need them.
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 UPDATE_URL = "https://raw.githubusercontent.com/tfem1/waves/main/waves.py"
 
 # ───────────────────────────── themes ─────────────────────────────
@@ -205,13 +201,38 @@ def read(path: str, default: str = "") -> str:
         return default
 
 
+def which(cmd: str):
+    for d in os.environ.get("PATH", os.defpath).split(os.pathsep):
+        p = os.path.join(d or ".", cmd)
+        if os.path.isfile(p) and os.access(p, os.X_OK):
+            return p
+    return None
+
+
 def run(cmd: list[str]) -> str:
-    if not shutil.which(cmd[0]):
+    if not which(cmd[0]):
         return ""
+    import subprocess
     try:
         return subprocess.run(cmd, capture_output=True, text=True, timeout=2).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return ""
+
+
+def get_user() -> str:
+    for k in ("LOGNAME", "USER", "LNAME", "USERNAME"):
+        v = os.environ.get(k)
+        if v:
+            return v
+    import getpass
+    return getpass.getuser()
+
+
+def get_host() -> str:
+    if hasattr(os, "uname"):
+        return os.uname().nodename
+    import socket
+    return socket.gethostname()
 
 
 def human(n: float, unit="B") -> str:
@@ -254,12 +275,14 @@ def get_os() -> str:
         if "=" in line:
             k, v = line.split("=", 1)
             rel[k] = v.strip().strip('"')
-    name = rel.get("PRETTY_NAME") or rel.get("NAME") or platform.system()
-    return f"{name} {platform.machine()}"
+    u = os.uname()
+    name = rel.get("PRETTY_NAME") or rel.get("NAME") or u.sysname
+    return f"{name} {u.machine}"
 
 
 def get_kernel() -> str:
-    return f"{platform.system()} {platform.release()}"
+    u = os.uname()
+    return f"{u.sysname} {u.release}"
 
 
 def get_uptime() -> str:
@@ -288,6 +311,7 @@ def get_cpu() -> str:
             model = m.group(1)
             break
     if not model:
+        import platform
         model = run(["sysctl", "-n", "machdep.cpu.brand_string"]) or platform.processor()
     threads = os.cpu_count() or 0
     cores = len(set(re.findall(r"^core id\s*:\s*(\d+)", info, re.M))) * max(
@@ -309,7 +333,47 @@ def get_memory():
     return total - avail, total
 
 
+GPU_CACHE_DAYS = 7
+
+
+def pci_signature() -> str:
+    """Identifies the installed PCI devices (address, vendor, device id): cheap to read."""
+    base = "/sys/bus/pci/devices"
+    try:
+        names = sorted(os.listdir(base))
+    except OSError:
+        return ""
+    return ";".join(f"{d}:{read(f'{base}/{d}/vendor')}:{read(f'{base}/{d}/device')}" for d in names)
+
+
+def gpus_cache_path() -> str:
+    return os.path.join(os.path.dirname(state_path()), "gpus")
+
+
 def get_gpus(limit=2) -> list[str]:
+    sig = f"{__version__}|{pci_signature()}" if which("lspci") else ""
+    path = gpus_cache_path()
+    if sig:
+        try:
+            if time.time() - os.path.getmtime(path) < GPU_CACHE_DAYS * 86400:
+                lines = read(path).split("\n")
+                if lines and lines[0] == sig:
+                    return [g for g in lines[1:] if g][:limit]
+        except OSError:
+            pass
+    gpus = query_gpus()
+    if sig:
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path + ".tmp", "w", encoding="utf-8") as f:
+                f.write("\n".join([sig] + gpus) + "\n")
+            os.replace(path + ".tmp", path)
+        except OSError:
+            pass
+    return gpus[:limit]
+
+
+def query_gpus() -> list[str]:
     gpus = []
     out = run(["lspci", "-mm"])
     for line in out.splitlines():
@@ -330,7 +394,7 @@ def get_gpus(limit=2) -> list[str]:
                 gpus.append(f"{vendors.get(v, v)} GPU [{read(f'{base}/{d}/device')}]")
     if not gpus and sys.platform == "darwin":
         gpus = re.findall(r"Chipset Model:\s*(.+)", run(["system_profiler", "SPDisplaysDataType"]))
-    return gpus[:limit]
+    return gpus
 
 
 def get_disks(limit=2) -> list[dict]:
@@ -363,8 +427,8 @@ def get_disks(limit=2) -> list[dict]:
 
 def get_root_usage():
     try:
-        u = shutil.disk_usage("/")
-        return u.used, u.total
+        st = os.statvfs("/")
+        return (st.f_blocks - st.f_bfree) * st.f_frsize, st.f_blocks * st.f_frsize
     except OSError:
         return 0, 0
 
@@ -415,6 +479,7 @@ def reg_subkeys(path: str) -> list[str]:
 
 
 def win_run(cmd: list[str], timeout=6) -> str:
+    import subprocess
     try:
         return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
                               creationflags=0x08000000).stdout.strip()  # CREATE_NO_WINDOW
@@ -431,6 +496,7 @@ def win_os() -> str:
     if build >= 22000:  # Windows 11 still reports "Windows 10" in the registry
         name = name.replace("Windows 10", "Windows 11")
     version = reg(WIN_CV, "DisplayVersion") or reg(WIN_CV, "ReleaseId") or ""
+    import platform
     arch = ARCH.get(platform.machine().lower(), platform.machine())
     return " ".join(x for x in (name, version, arch) if x)
 
@@ -441,6 +507,7 @@ def win_kernel() -> str:
     build = reg(WIN_CV, "CurrentBuildNumber")
     ubr = reg(WIN_CV, "UBR")
     if major is None or build is None:
+        import platform
         return f"Windows NT {platform.version()}"
     return f"Windows NT {major}.{minor}.{build}" + (f".{ubr}" if ubr is not None else "")
 
@@ -471,6 +538,7 @@ def win_memory():
 
 def win_cpu() -> str:
     key = r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"
+    import platform
     model = reg(key, "ProcessorNameString") or platform.processor() or "Unknown CPU"
     threads = os.cpu_count() or 0
     mhz = reg(key, "~MHz")
@@ -564,6 +632,7 @@ def disks_cache_path() -> str:
 
 
 def refresh_disks_cache() -> list[dict]:
+    import json
     disks = win_disks_query()
     path = disks_cache_path()
     try:
@@ -579,6 +648,8 @@ def refresh_disks_cache() -> list[dict]:
 def win_disks(limit=2) -> list[dict]:
     # shortcut: Get-PhysicalDisk needs a ~1 s PowerShell spawn, so show the cached list and refresh it
     # in a detached process; a plugged/unplugged disk shows up on the next run
+    import json
+    import subprocess
     try:
         with open(disks_cache_path(), encoding="utf-8") as f:
             disks = json.load(f)
@@ -596,6 +667,7 @@ def win_disks(limit=2) -> list[dict]:
 def win_disks_query() -> list[dict]:
     ps = ("Get-PhysicalDisk | Select-Object FriendlyName,Size,MediaType,BusType,DeviceId "
           "| ConvertTo-Json -Compress")
+    import json
     out = win_run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps])
     disks = []
     try:
@@ -616,6 +688,7 @@ def win_disks_query() -> list[dict]:
                           "model": (d.get("FriendlyName") or "").strip(), "size": size, "type": kind})
     if not disks:  # fallback: fixed drives
         import ctypes
+        import shutil
         import string
         mask = ctypes.windll.kernel32.GetLogicalDrives()
         for i, letter in enumerate(string.ascii_uppercase):
@@ -658,6 +731,7 @@ def format_uptime(s: int) -> str:
 
 def collect() -> dict:
     if IS_WIN:
+        import shutil
         drive = os.environ.get("SystemDrive", "C:")
         try:
             u = shutil.disk_usage(drive + "\\")
@@ -666,8 +740,8 @@ def collect() -> dict:
             root = {"used": 0, "total": 0, "label": drive}
         used, total = win_memory()
         return {
-            "user": getpass.getuser(),
-            "host": socket.gethostname(),
+            "user": get_user(),
+            "host": get_host(),
             "os": win_os(),
             "kernel": win_kernel(),
             "uptime": format_uptime(win_uptime_seconds()),
@@ -682,8 +756,8 @@ def collect() -> dict:
     used, total = get_memory()
     rused, rtotal = get_root_usage()
     return {
-        "user": getpass.getuser(),
-        "host": socket.gethostname(),
+        "user": get_user(),
+        "host": get_host(),
         "os": get_os(),
         "kernel": get_kernel(),
         "uptime": get_uptime(),
@@ -935,6 +1009,7 @@ def maybe_start_update_check(mode: str) -> None:
         return
     st["last_check"] = str(int(time.time()))
     try:
+        import subprocess
         save_state(st)
         cmd = [sys.executable, script_path(), "--_update-check"]
         if IS_WIN:
@@ -1038,6 +1113,7 @@ def picker_frame(data: dict, tab: int, idx: int, saved: str, msg: str, icon: str
     themes = TABS[tab][1]
     name = themes[idx]
     p = Painter(name, True)
+    import shutil
     cols = shutil.get_terminal_size((100, 30)).columns
 
     # category tabs
@@ -1202,6 +1278,7 @@ def main() -> None:
     t0 = time.perf_counter()
     data = collect()
     if a.json:
+        import json
         print(json.dumps(data, indent=2))
         return
     if a.color:
